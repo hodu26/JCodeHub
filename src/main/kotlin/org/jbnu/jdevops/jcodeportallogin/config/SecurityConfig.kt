@@ -5,6 +5,8 @@ import jakarta.servlet.http.HttpSessionListener
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter
 
@@ -16,16 +18,16 @@ class SecurityConfig {
         http
             .authorizeHttpRequests { authz ->
                 authz
-                    .requestMatchers("/login", "/error", "/oauth2/**").permitAll()
+                    .requestMatchers("/api/auth/signup","api/auth/login/basic", "/login/oidc/success", "/error", "/oauth2/**").permitAll()
                     .anyRequest().authenticated()  // 모든 요청에 대해 인증 요구
             }
             .oauth2Login { oauth2 ->
-                oauth2.defaultSuccessUrl("/login/success", true)  // 인증 성공 후 이동할 URL 설정
+                oauth2.defaultSuccessUrl("/api/auth/login/oidc/success", true)  // 인증 성공 후 이동할 URL 설정
             }
             .logout { logout ->
                 logout
                     .logoutUrl("/logout")
-                    .logoutSuccessUrl("/login")
+                    .logoutSuccessUrl("/login/basic")
                     .invalidateHttpSession(true)
                     .deleteCookies("JSESSIONID")
             }
@@ -52,5 +54,10 @@ class SecurityConfig {
                 se.session.maxInactiveInterval = 3600  // 1시간 (3600초)
             }
         }
+    }
+
+    @Bean
+    fun passwordEncoder(): PasswordEncoder {
+        return BCryptPasswordEncoder()
     }
 }
