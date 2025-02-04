@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(name = "user_courses")
-data class User_Courses(
+data class UserCourses(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
@@ -19,6 +19,9 @@ data class User_Courses(
 
     @Column(nullable = false)
     val jcode: Boolean,
+
+    @OneToMany(mappedBy = "userCourse", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val jcodes: List<Jcode> = mutableListOf(),
 
     @Column(nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now()

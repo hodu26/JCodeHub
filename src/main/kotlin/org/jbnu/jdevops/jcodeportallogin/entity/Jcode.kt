@@ -9,8 +9,9 @@ data class Jcode(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val jcodeId: Long = 0,
 
-    @Column(nullable = false)
-    val id2: Int,
+    @ManyToOne
+    @JoinColumn(name = "user_course_id", nullable = false)  // UserCourses 엔티티와 매핑
+    val userCourse: UserCourses,
 
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)
