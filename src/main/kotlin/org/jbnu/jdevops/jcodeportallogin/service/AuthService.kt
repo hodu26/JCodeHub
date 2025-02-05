@@ -16,7 +16,6 @@ class AuthService(
     private val userRepository: UserRepository,
     private val loginRepository: LoginRepository,
     private val passwordEncoder: PasswordEncoder,
-    private val keycloakAuthService: KeycloakAuthService,
     private val jwtAuthService: JwtAuthService
 ) {
 

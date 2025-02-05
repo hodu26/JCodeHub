@@ -6,22 +6,15 @@ import org.springframework.stereotype.Service
 import org.springframework.data.redis.core.StringRedisTemplate
 import java.security.PublicKey
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 @Service
 class KeycloakAuthService(
-    private val redisTemplate: StringRedisTemplate,
     private val keycloakJwksService: KeycloakJwksService
 ) {
     // -----------------------------------
     // JWT 서명 검증 (Redis에서 JWKS 가져옴)
     fun validateToken(token: String): Boolean {
         try {
-            // 블랙리스트 확인
-            if (isTokenBlacklisted(token)) {
-                return false
-            }
-
             // Redis에서 JWKS 가져와 검증 시도
             val publicKey: PublicKey = keycloakJwksService.getPublicKey()
             if (verifyTokenWithKey(token, publicKey)) {
@@ -64,7 +57,7 @@ class KeycloakAuthService(
             // 만료 시간 확인
             val expiration = claims.expiration
             if (expiration.before(Date())) {
-                addToBlacklist(token)
+                println("Token expired: ${token}")
                 return false
             }
 
@@ -104,15 +97,5 @@ class KeycloakAuthService(
         val roles = jcodehubAccess["roles"] as? List<*> ?: return emptyList()
 
         return roles.mapNotNull { it?.toString() }
-    }
-
-    // Redis 블랙리스트 확인
-    private fun isTokenBlacklisted(token: String): Boolean {
-        return redisTemplate.hasKey("blacklist:$token")
-    }
-
-    // Redis 블랙리스트 추가 (만료된 토큰)
-    private fun addToBlacklist(token: String) {
-        redisTemplate.opsForValue().set("blacklist:$token", "1", 10, TimeUnit.MINUTES)
     }
 }

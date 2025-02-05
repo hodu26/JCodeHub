@@ -25,8 +25,6 @@ class AuthController(
     private val authService: AuthService,
     private val userService: UserService,
     private val keycloakAuthService: KeycloakAuthService,
-    private val keycloakTokenIntrospectionService: KeycloakTokenIntrospectionService,
-    private val jwtAuthService: JwtAuthService
 ) {
 
     // 일반 로그인 ( ADMIN, PROFESSOR, ASSISTANT )
