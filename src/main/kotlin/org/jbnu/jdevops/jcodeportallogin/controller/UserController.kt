@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*
 import jakarta.servlet.http.HttpServletRequest
 import org.jbnu.jdevops.jcodeportallogin.dto.*
 import org.jbnu.jdevops.jcodeportallogin.service.JwtAuthService
+import org.jbnu.jdevops.jcodeportallogin.service.KeycloakAuthService
 
 @RestController
 @RequestMapping("/api/user")

@@ -16,6 +16,7 @@ class AuthService(
     private val userRepository: UserRepository,
     private val loginRepository: LoginRepository,
     private val passwordEncoder: PasswordEncoder,
+    private val keycloakAuthService: KeycloakAuthService,
     private val jwtAuthService: JwtAuthService
 ) {
 
@@ -31,23 +32,28 @@ class AuthService(
         }
 
         // JWT 토큰 생성 (이메일 + 학교 정보)
-        val jwt = jwtAuthService.createToken(user.email, RoleType.ADMIN)
+        val jwt = jwtAuthService.createToken(user.email, RoleType.STUDENT)
         return mapOf("message" to "Login successful", "token" to jwt)
     }
 
-    fun oidcLogin(email: String): Map<String, String> {
+    fun oidcLogin(email: String, roles: List<String>): Map<String, String> {
         try {
+            val roleType = when {
+                roles.any { it.equals("ADMIN", ignoreCase = true) } -> RoleType.ADMIN
+                roles.any { it.equals("PROFESSOR", ignoreCase = true) } -> RoleType.PROFESSOR
+                roles.any { it.equals("ASSISTANT", ignoreCase = true) } -> RoleType.ASSISTANCE
+                else -> RoleType.STUDENT
+            }
+
             // 데이터베이스에서 사용자 확인 후 저장
             val user = userRepository.findByEmail(email) ?: userRepository.save(
                 User(
                     email = email,
-                    role = RoleType.STUDENT
+                    role = roleType,
                 )
             )
 
-            // JWT 토큰 생성 (이메일 + 학교 정보)
-            val jwt = jwtAuthService.createToken(email, RoleType.STUDENT)
-            return mapOf("message" to "Login successful", "token" to jwt)
+            return mapOf("message" to "Login successful", "role" to user.role.name)
         } catch (e: Exception) {
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "OIDC Login failed")
         }

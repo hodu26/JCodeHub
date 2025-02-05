@@ -3,21 +3,25 @@ package org.jbnu.jdevops.jcodeportallogin.config
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.servlet.http.HttpSessionEvent
 import jakarta.servlet.http.HttpSessionListener
+import org.jbnu.jdevops.jcodeportallogin.security.KeycloakAuthFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.web.cors.CorsConfiguration
 
 @Configuration
 class SecurityConfig {
 
     @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    fun securityFilterChain(http: HttpSecurity, keycloakAuthFilter: KeycloakAuthFilter): SecurityFilterChain {
         http
+            .csrf { it.disable() }  // CSRF 보호 비활성화
             .cors { cors ->
                 cors.configurationSource {
                     val configuration = CorsConfiguration()
@@ -31,48 +35,23 @@ class SecurityConfig {
             }
             .authorizeHttpRequests { authz ->
                 authz
-                    .requestMatchers("/api/user/info", "/api/user/courses", "/api/user/**").permitAll()
-                    .requestMatchers("/api/user/student", "/api/user/assistant", "/api/user/professor").hasAuthority("ADMIN")
-                    .requestMatchers("/api/user/**").hasAuthority("ADMIN")
-                    .requestMatchers("/api/auth/signup", "/api/auth/login/basic").permitAll()
-                    .requestMatchers("/oauth2/**", "/error", "/api/**").permitAll()
+                    .requestMatchers("/api/auth/signup", "/api/auth/login/basic", "/api/auth/login/oidc/success").permitAll()
                     .requestMatchers("/swagger-ui/index.html", "/v3/api-docs/**").permitAll()
+                    .requestMatchers("/api/user/info", "/api/user/courses", "/api/user/**").permitAll()  // 임시
+                    .requestMatchers("/api/user/**").hasAuthority("ADMIN")  // 임시
+                    .requestMatchers("/api/user/student", "/api/user/assistant", "/api/user/professor").hasAuthority("ADMIN")
+                    .requestMatchers("/api/**").permitAll()  // 임시
+                    .requestMatchers("/api/**").authenticated()
                     .anyRequest().authenticated()  // 모든 요청에 대해 인증 요구
             }
-            .oauth2Login { oauth2 ->
-                oauth2.defaultSuccessUrl("/api/auth/login/oidc/success", true)  // 인증 성공 후 이동할 URL 설정
-            }
-            .csrf { it.disable() }  // csrf 허용 ( 개발 용 )
-            .logout { logout ->
-                logout
-                    .logoutUrl("/logout")
-                    .logoutSuccessUrl("/login/basic")
-                    .invalidateHttpSession(true)
-                    .deleteCookies("JSESSIONID")
-            }
             .sessionManagement { sessionManagement ->
-                sessionManagement.sessionFixation { sessionFixation ->
-                    sessionFixation.migrateSession()  // 세션 고정 보호
-                }
-                sessionManagement.maximumSessions(1)  // 동시 세션 1개로 제한
+                sessionManagement
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // API 요청은 JWT 인증 (세션 X)
             }
-            .addFilterAfter(redirectFilter(), OAuth2LoginAuthenticationFilter::class.java)
+            // JWT 기반 인증 필터 추가 (Keycloak 검증)
+            .addFilterBefore(keycloakAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
 
         return http.build()
-    }
-
-    @Bean
-    fun redirectFilter(): CustomRedirectFilter {
-        return CustomRedirectFilter()
-    }
-
-    @Bean
-    fun httpSessionListener(): HttpSessionListener {
-        return object : HttpSessionListener {
-            override fun sessionCreated(se: HttpSessionEvent) {
-                se.session.maxInactiveInterval = 3600  // 1시간 (3600초)
-            }
-        }
     }
 
     @Bean
