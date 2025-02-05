@@ -11,4 +11,5 @@ interface UserCoursesRepository : JpaRepository<UserCourses, Int> {
     fun findByCourse_CourseId(courseId: Long): List<UserCourses>
     fun findByUserAndCourse(user: User, course: Course): UserCourses?
     fun existsByUserAndCourse(user: User, course: Course): Boolean
+    fun findByUserAndCourseCode(user: User, courseCode: String): UserCourses?
 }

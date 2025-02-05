@@ -5,27 +5,27 @@ import jakarta.servlet.http.HttpServletResponse
 import org.jbnu.jdevops.jcodeportallogin.dto.LoginUserDto
 import org.jbnu.jdevops.jcodeportallogin.dto.RegisterUserDto
 import org.jbnu.jdevops.jcodeportallogin.entity.RoleType
-import org.jbnu.jdevops.jcodeportallogin.entity.User
 import org.jbnu.jdevops.jcodeportallogin.service.*
 import org.jbnu.jdevops.jcodeportallogin.util.JwtUtil
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
-import org.springframework.security.oauth2.core.oidc.user.OidcUser
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
-import java.util.*
 
 @RestController
 @RequestMapping("/api/auth")
 class AuthController(
     private val authService: AuthService,
     private val userService: UserService,
-    private val keycloakAuthService: KeycloakAuthService,
+    private val redisService: RedisService
 ) {
+    @PostMapping("/signup")
+    fun register(@RequestBody registerUserDto: RegisterUserDto): ResponseEntity<String> {
+        return userService.register(registerUserDto)
+    }
 
     // 일반 로그인 ( ADMIN, PROFESSOR, ASSISTANT )
     @PostMapping("/login/basic")
@@ -46,42 +46,35 @@ class AuthController(
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
 
         val roles = authentication.authorities.map { it.authority }
-        println("✅ Extracted roles: $roles")
 
-        // 🔹 기존 서비스 로직 유지
+        // 기존 서비스 로직 유지
         val result = authService.oidcLogin(email, roles)
         return ResponseEntity.ok(result)
     }
 
-
-    @PostMapping("/signup")
-    fun register(@RequestBody registerUserDto: RegisterUserDto): ResponseEntity<String> {
-        return userService.register(registerUserDto)
-    }
-
     // Node.js 서버로 리다이렉션 (JCode)
+    @Value("\${nodejs.url}")  // 환경 변수에서 Node.js URL 가져오기
+    private lateinit var nodeJsUrl: String
     @GetMapping("/redirect-to-node")
     fun redirectToNode(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        @RequestParam courseCode: String
-    ): ResponseEntity<Map<String, String>> {
+        @RequestParam courseCode: String,
+        @RequestParam st: String
+    ): ResponseEntity<Void> {
 
         val token = request.getHeader("Authorization")?.removePrefix("Bearer ")
-            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing Authorization Header")
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing Authorization Token")
 
-        // **Keycloak Access Token 검증**
-        if (!keycloakAuthService.validateToken(token)) {
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or Expired Access Token")
-        }
+        // Node.js 서버 URL 설정 (st 파라미터 추가)
+        val nodeJsUrl = "$nodeJsUrl?courseCode=$courseCode&st=$st"
 
-        // Node.js 서버 URL 설정
-        val nodeJsUrl = "http://localhost:3001/jcode?courseCode=$courseCode"
-
-        // **Keycloak Access Token을 HTTP-Only Secure 쿠키로 설정**
+        // Keycloak Access Token을 HTTP-Only Secure 쿠키로 설정
         response.addCookie(JwtUtil.createJwtCookie("jwt", token))
 
-        return ResponseEntity.ok(mapOf("redirectUrl" to nodeJsUrl))
+        // 클라이언트를 Node.js 서버로 리다이렉트
+        response.sendRedirect(nodeJsUrl)
+        return ResponseEntity.status(HttpStatus.FOUND).build()
     }
 
     // 학생 계정 추가

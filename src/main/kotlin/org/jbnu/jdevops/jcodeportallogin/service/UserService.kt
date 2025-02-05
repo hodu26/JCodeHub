@@ -21,7 +21,8 @@ class UserService(
     private val userCoursesRepository: UserCoursesRepository,
     private val assignmentRepository: AssignmentRepository,
     private val passwordEncoder: PasswordEncoder,
-    private val courseRepository: CourseRepository
+    private val courseRepository: CourseRepository,
+    private val redisService: RedisService
 ) {
     @Transactional
     fun register(registerUserDto: RegisterUserDto): ResponseEntity<String> {
@@ -143,6 +144,12 @@ class UserService(
             jcode = false // 기본적으로 JCode 사용 여부 false
         )
         userCoursesRepository.save(userCourse)
+
+        // DB 저장 후 Redis 데이터 검증 및 동기화
+        val storedUserCourse = userCoursesRepository.findByUserAndCourseCode(user, course.code)
+        if (storedUserCourse != null) {
+            redisService.addUserToCourseList(course.code, email)
+        }
     }
 
     // 유저 강의 탈퇴 (연관된 정보 삭제)

@@ -44,7 +44,6 @@ class KeycloakAuthService(
         }
     }
 
-
     // 토큰을 주어진 Public Key로 검증하는 함수
     private fun verifyTokenWithKey(token: String, publicKey: PublicKey): Boolean {
         return try {

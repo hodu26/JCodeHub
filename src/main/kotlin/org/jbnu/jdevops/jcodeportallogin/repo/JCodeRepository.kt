@@ -10,4 +10,5 @@ interface JCodeRepository : JpaRepository<Jcode, Long> {
     fun findByUser(user: User): List<Jcode>
     fun findByUserAndCourse(user: User, course: Course): Jcode?
     fun findByUserCourse(userCourse: UserCourses): Jcode?
+    fun findByCourse_codeAndUser_Email(code: String, email: String): Jcode?
 }

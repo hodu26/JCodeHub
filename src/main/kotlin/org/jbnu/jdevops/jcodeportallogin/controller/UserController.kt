@@ -7,6 +7,9 @@ import jakarta.servlet.http.HttpServletRequest
 import org.jbnu.jdevops.jcodeportallogin.dto.*
 import org.jbnu.jdevops.jcodeportallogin.service.JwtAuthService
 import org.jbnu.jdevops.jcodeportallogin.service.KeycloakAuthService
+import org.springframework.http.HttpStatus
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("/api/user")
@@ -63,15 +66,29 @@ class UserController(
         @PathVariable courseId: Long,
         request: HttpServletRequest
     ): ResponseEntity<String> {
-        val email = extractEmailFromToken(request)
+        // 필터에서 이미 저장된 SecurityContext의 인증 정보 사용
+        val authentication = SecurityContextHolder.getContext().authentication
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated")
+
+        val email = authentication.principal as? String
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
+
         userService.joinCourse(email, courseId)
+
         return ResponseEntity.ok("Successfully joined the course")
     }
+
 
     // 유저 강의 탈퇴
     @DeleteMapping("/courses/{courseId}/leave")
     fun leaveCourse(@PathVariable courseId: Long, request: HttpServletRequest): ResponseEntity<String> {
-        val email = extractEmailFromRequest(request)
+        // 필터에서 이미 저장된 SecurityContext의 인증 정보 사용
+        val authentication = SecurityContextHolder.getContext().authentication
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated")
+
+        val email = authentication.principal as? String
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
+
         userService.leaveCourse(courseId, email)
         return ResponseEntity.ok("User successfully left the course")
     }

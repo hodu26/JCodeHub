@@ -15,7 +15,8 @@ class JCodeService(
     private val jCodeRepository: JCodeRepository,
     private val courseRepository: CourseRepository,
     private val userRepository: UserRepository,
-    private val userCoursesRepository: UserCoursesRepository
+    private val userCoursesRepository: UserCoursesRepository,
+    private val redisService: RedisService
 ) {
 
     // JCode 생성
@@ -41,6 +42,12 @@ class JCodeService(
         // UserCourses 테이블의 jcode 값 변경 (JCode 생성 시 true)
         val updatedUserCourse = userCourse.copy(jcode = true)
         userCoursesRepository.save(updatedUserCourse)
+
+        // DB 저장 후 Redis 데이터 검증 및 동기화
+        val storedJcode = jCodeRepository.findByCourse_codeAndUser_Email(course.code, email)
+        if (storedJcode != null) {
+            redisService.storeUserCourse(email, course.code, jcodeUrl)  // 🔹 courseId → courseCode 변경
+        }
 
         return JCodeDto(jcodeId = jCode.jcodeId, jcodeUrl = jCode.jcodeUrl, courseName = jCode.course.name)
     }
