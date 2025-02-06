@@ -78,6 +78,7 @@ class UserService(
         val userCourses = user.courses
         return userCourses.map {
             UserCoursesDto(
+                courseId = it.course.courseId,
                 courseName = it.course.name,
                 courseCode = it.course.code
             )
@@ -108,6 +109,7 @@ class UserService(
             val jcode = jcodeRepository.findByUserAndCourse(user, it.course)
 
             UserCourseDetailsDto(
+                courseId = it.course.courseId,
                 courseName = it.course.name,
                 courseCode = it.course.code,
                 assignments = assignments.map { assignment ->
@@ -170,6 +172,9 @@ class UserService(
 
         // UserCourses에서 유저 삭제 (강의 탈퇴)
         userCoursesRepository.delete(userCourse)
+
+        // Redis에서 해당 강의의 참여자 목록에서 해당 유저(email) 제거
+        redisService.removeUserFromCourseList(course.code, email)
     }
 
     @Transactional(readOnly = true)
@@ -178,14 +183,16 @@ class UserService(
     }
 
     @Transactional(readOnly = true)
-    fun getUserByEmail(email: String): UserDto? {
-        return userRepository.findByEmail(email)?.toDto()
+    fun getUserById(userId: Long): UserDto? {
+        val user = userRepository.findByUserId(userId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with id: $userId")
+        return user.toDto()
     }
 
     @Transactional
-    fun deleteUser(email: String) {
-        val user = userRepository.findByEmail(email)
-            ?: throw IllegalArgumentException("User not found with email: $email")
+    fun deleteUser(userId: Long) {
+        val user = userRepository.findByUserId(userId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with id: $userId")
         userRepository.delete(user)
     }
 

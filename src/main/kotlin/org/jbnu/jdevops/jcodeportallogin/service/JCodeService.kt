@@ -18,13 +18,12 @@ class JCodeService(
     private val userCoursesRepository: UserCoursesRepository,
     private val redisService: RedisService
 ) {
-
-    // JCode 생성
-    fun createJCode(courseId: Long, jcodeUrl: String, email: String): JCodeDto {
+    // JCode 생성 (관리자 전용)
+    fun createJCode(courseId: Long, jcodeUrl: String, userId: Long): JCodeDto {
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
 
-        val user = userRepository.findByEmail(email)
+        val user = userRepository.findByUserId(userId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
 
         val userCourse = userCoursesRepository.findByUserAndCourse(user, course)
@@ -39,30 +38,41 @@ class JCodeService(
             )
         )
 
-        // UserCourses 테이블의 jcode 값 변경 (JCode 생성 시 true)
+        // UserCourses 테이블의 jcode 값을 true로 변경 (JCode 생성 시)
         val updatedUserCourse = userCourse.copy(jcode = true)
         userCoursesRepository.save(updatedUserCourse)
 
-        // DB 저장 후 Redis 데이터 검증 및 동기화
-        val storedJcode = jCodeRepository.findByCourse_codeAndUser_Email(course.code, email)
+        // DB 저장 후 Redis 동기화
+        val storedJcode = jCodeRepository.findByUserAndCourse(user, course)
         if (storedJcode != null) {
-            redisService.storeUserCourse(email, course.code, jcodeUrl)  // 🔹 courseId → courseCode 변경
+            redisService.storeUserCourse(user.email, course.code, jcodeUrl)
         }
 
-        return JCodeDto(jcodeId = jCode.jcodeId, jcodeUrl = jCode.jcodeUrl, courseName = jCode.course.name)
+        return JCodeDto(
+            jcodeId = jCode.jcodeId,
+            jcodeUrl = jCode.jcodeUrl,
+            courseName = jCode.course.name
+        )
     }
 
-    // JCode 삭제 (JCode ID를 받아 삭제)
-    fun deleteJCode(jcodeId: Long) {
-        val jCode = jCodeRepository.findById(jcodeId)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "JCode not found") }
+    // JCode 삭제 (관리자 전용)
+    fun deleteJCode(userId: Long, courseId: Long) {
+        val user = userRepository.findByUserId(userId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+        val course = courseRepository.findById(courseId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
 
-        val userCourse = jCode.userCourse
+        val jCode = jCodeRepository.findByUserAndCourse(user, course)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "JCode not found for the specified user and course")
 
         jCodeRepository.delete(jCode)
 
-        // UserCourses 테이블의 jcode 값 변경 (JCode 삭제 시 false)
+        // UserCourses 테이블의 jcode 값을 false로 변경 (JCode 삭제 시)
+        val userCourse = jCode.userCourse
         val updatedUserCourse = userCourse.copy(jcode = false)
         userCoursesRepository.save(updatedUserCourse)
+
+        // Redis에서도 해당 정보를 삭제
+        redisService.deleteUserCourse(user.email, course.code)
     }
 }

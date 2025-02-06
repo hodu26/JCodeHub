@@ -1,4 +1,4 @@
-package org.jbnu.jdevops.jcodeportallogin.service
+package org.jbnu.jdevops.jcodeportallogin.service.token
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper

@@ -1,4 +1,4 @@
-package org.jbnu.jdevops.jcodeportallogin.service
+package org.jbnu.jdevops.jcodeportallogin.service.token
 
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts

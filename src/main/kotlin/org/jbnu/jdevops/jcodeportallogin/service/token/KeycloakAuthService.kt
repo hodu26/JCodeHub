@@ -1,9 +1,8 @@
-package org.jbnu.jdevops.jcodeportallogin.service
+package org.jbnu.jdevops.jcodeportallogin.service.token
 
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import org.springframework.stereotype.Service
-import org.springframework.data.redis.core.StringRedisTemplate
 import java.security.PublicKey
 import java.util.*
 

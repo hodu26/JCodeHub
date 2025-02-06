@@ -17,7 +17,6 @@ class CourseService(
     private val assignmentRepository: AssignmentRepository,
     private val courseRepository: CourseRepository
 ) {
-
     // 강의별 유저 조회
     fun getUsersByCourse(courseId: Long): List<UserInfoDto> {
         val userCourses = userCoursesRepository.findByCourse_CourseId(courseId)
@@ -29,6 +28,7 @@ class CourseService(
         return userCourses.map {
             val user = it.user
             UserInfoDto(
+                userId = user.userId,
                 email = user.email,
                 role = user.role,
                 studentNum = user.studentNum
@@ -67,7 +67,11 @@ class CourseService(
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
         val updatedCourse = course.copy(name = courseDto.name, code = courseDto.code)
         courseRepository.save(updatedCourse)
-        return CourseDto(courseId = updatedCourse.courseId, name = updatedCourse.name, code = updatedCourse.code)
+        return CourseDto(
+            courseId = updatedCourse.courseId,
+            name = updatedCourse.name,
+            code = updatedCourse.code
+        )
     }
 
     // 강의 삭제

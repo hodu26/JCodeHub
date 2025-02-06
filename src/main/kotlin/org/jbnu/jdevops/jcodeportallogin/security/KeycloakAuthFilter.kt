@@ -4,7 +4,7 @@ import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletRequest
 import jakarta.servlet.ServletResponse
 import jakarta.servlet.http.HttpServletRequest
-import org.jbnu.jdevops.jcodeportallogin.service.KeycloakAuthService
+import org.jbnu.jdevops.jcodeportallogin.service.token.KeycloakAuthService
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -37,7 +37,7 @@ class KeycloakAuthFilter(
 
             // 역할(Role) 추출 (Keycloak `realm_access.roles`에서 가져옴)
             val roles = keycloakAuthService.extractRoles(token)
-                .map { SimpleGrantedAuthority("$it") }
+                .map { SimpleGrantedAuthority("ROLE_$it") }
 
             // Security Context에 사용자 인증 정보 저장
             val auth = UsernamePasswordAuthenticationToken(email, null, roles)

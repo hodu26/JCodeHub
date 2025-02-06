@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface UserCoursesRepository : JpaRepository<UserCourses, Int> {
     fun findByUser(user: User): List<UserCourses>
-    fun findByUser_UserId(userId: Long): List<UserCourses>
     fun findByCourse_CourseId(courseId: Long): List<UserCourses>
     fun findByUserAndCourse(user: User, course: Course): UserCourses?
     fun existsByUserAndCourse(user: User, course: Course): Boolean

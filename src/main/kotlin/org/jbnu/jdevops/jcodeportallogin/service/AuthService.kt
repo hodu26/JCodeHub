@@ -6,6 +6,7 @@ import org.jbnu.jdevops.jcodeportallogin.entity.RoleType
 import org.jbnu.jdevops.jcodeportallogin.entity.User
 import org.jbnu.jdevops.jcodeportallogin.repo.LoginRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.UserRepository
+import org.jbnu.jdevops.jcodeportallogin.service.token.JwtAuthService
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -38,9 +39,9 @@ class AuthService(
     fun oidcLogin(email: String, roles: List<String>): Map<String, String> {
         try {
             val roleType = when {
-                roles.any { it.equals("ADMIN", ignoreCase = true) } -> RoleType.ADMIN
-                roles.any { it.equals("PROFESSOR", ignoreCase = true) } -> RoleType.PROFESSOR
-                roles.any { it.equals("ASSISTANT", ignoreCase = true) } -> RoleType.ASSISTANCE
+                roles.any { it.equals("ROLE_ADMIN", ignoreCase = true) } -> RoleType.ADMIN
+                roles.any { it.equals("ROLE_PROFESSOR", ignoreCase = true) } -> RoleType.PROFESSOR
+                roles.any { it.equals("ROLE_ASSISTANT", ignoreCase = true) } -> RoleType.ASSISTANCE
                 else -> RoleType.STUDENT
             }
 

@@ -36,7 +36,7 @@ class SecurityConfig {
             .authorizeHttpRequests { authz ->
                 authz
                     .requestMatchers("/api/auth/signup", "/api/auth/login/basic", "/api/auth/login/oidc/success").permitAll()
-                    .requestMatchers("/swagger-ui/index.html", "/v3/api-docs/**").permitAll()
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                     .requestMatchers("/api/user/info", "/api/user/courses", "/api/user/**").permitAll()  // 임시
                     .requestMatchers("/api/user/**").hasAuthority("ADMIN")  // 임시
                     .requestMatchers("/api/user/student", "/api/user/assistant", "/api/user/professor").hasAuthority("ADMIN")
