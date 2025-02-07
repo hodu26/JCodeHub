@@ -10,10 +10,9 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
-@Tag(name = "Course API", description = "강의 관련 API (ADMIN, PROFESSOR 전용)")
+@Tag(name = "Course API", description = "강의 관련 API")
 @RestController
 @RequestMapping("/api/courses")
-@PreAuthorize("hasAnyRole('ADMIN', 'PROFESSOR')")  // ADMIN, PROFESSOR 권한이 없는 사용자는 모두 접근 불가
 class CourseController(
     private val courseService: CourseService
 ) {
@@ -37,31 +36,34 @@ class CourseController(
         return ResponseEntity.ok(courseService.getAssignmentsByCourse(courseId))
     }
 
-    // 강의 추가
-    @Operation(
-        summary = "강의 추가",
-        description = "새로운 강의를 생성합니다."
-    )
+    // 강의 key 재발급 API (ADMIN, PROFESSOR 전용)
+    @Operation(summary = "강의 key 재발급", description = "특정 강의의 key를 재발급합니다.")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSOR')")
+    @GetMapping("/{courseId}/key")
+    fun reissueCourseKey(@PathVariable courseId: Long): ResponseEntity<String> {
+        val newKey = courseService.reissueCourseKey(courseId)
+        return ResponseEntity.ok(newKey)
+    }
+
+    // 강의 추가 (ADMIN, PROFESSOR 전용)
+    @Operation(summary = "강의 추가", description = "새로운 강의를 생성합니다. (ADMIN, PROFESSOR 전용)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSOR')")
     @PostMapping
     fun createCourse(@RequestBody courseDto: CourseDto): ResponseEntity<CourseDto> {
         return ResponseEntity.ok(courseService.createCourse(courseDto))
     }
 
-    // 강의 수정
-    @Operation(
-        summary = "강의 수정",
-        description = "특정 강의의 정보를 수정합니다."
-    )
+    // 강의 수정 (ADMIN, PROFESSOR 전용)
+    @Operation(summary = "강의 수정", description = "특정 강의의 정보를 수정합니다. (ADMIN, PROFESSOR 전용)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSOR')")
     @PutMapping("/{courseId}")
     fun updateCourse(@PathVariable courseId: Long, @RequestBody courseDto: CourseDto): ResponseEntity<CourseDto> {
         return ResponseEntity.ok(courseService.updateCourse(courseId, courseDto))
     }
 
-    // 강의 삭제
-    @Operation(
-        summary = "강의 삭제",
-        description = "특정 강의를 삭제합니다."
-    )
+    // 강의 삭제 (ADMIN, PROFESSOR 전용)
+    @Operation(summary = "강의 삭제", description = "특정 강의를 삭제합니다. (ADMIN, PROFESSOR 전용)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSOR')")
     @DeleteMapping("/{courseId}")
     fun deleteCourse(@PathVariable courseId: Long): ResponseEntity<String> {
         courseService.deleteCourse(courseId)

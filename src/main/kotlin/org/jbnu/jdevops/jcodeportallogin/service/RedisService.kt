@@ -13,27 +13,27 @@ class RedisService(
         return redisTemplate.opsForValue().get("course:$courseCode:jcode-url")
     }
 
-    // 이메일 & 강의코드 → JCode URL 저장
-    fun storeUserCourse(email: String, courseCode: String, jcodeUrl: String) {
-        val key = "user:$email:course:$courseCode"
-        redisTemplate.opsForValue().set(key, jcodeUrl, 1, TimeUnit.DAYS) // 유효기간 1일
+    // 이메일 & 강의코드 & 분반 → JCode URL 저장
+    fun storeUserCourse(email: String, courseCode: String, courseClss: Int, jcodeUrl: String) {
+        val key = "user:$email:course:$courseCode:$courseClss"
+        redisTemplate.opsForValue().set(key, jcodeUrl, 180, TimeUnit.DAYS) // 유효기간 6개월 (약 180일)
     }
 
-    // **이메일 & 강의코드 → 저장된 JCode URL 삭제**
-    fun deleteUserCourse(email: String, courseCode: String) {
-        val key = "user:$email:course:$courseCode"
+    // 이메일 & 강의코드 & 분반 → 저장된 JCode URL 삭제
+    fun deleteUserCourse(email: String, courseCode: String, courseClss: Int) {
+        val key = "user:$email:course:$courseCode:$courseClss"
         redisTemplate.delete(key)
     }
 
-    // 강의코드별 참여자 목록 추가
-    fun addUserToCourseList(courseCode: String, email: String) {
-        val key = "course:$courseCode:participants"
+    // 강의 참여자 목록에 유저 추가
+    fun addUserToCourseList(courseCode: String, courseClss: Int, email: String) {
+        val key = "course:$courseCode:$courseClss:participants"
         redisTemplate.opsForSet().add(key, email)
     }
 
-    // **강의코드별 참여자 목록에서 특정 유저 제거**
-    fun removeUserFromCourseList(courseCode: String, email: String) {
-        val key = "course:$courseCode:participants"
+    // 강의코드별 참여자 목록에서 특정 유저 제거
+    fun removeUserFromCourseList(courseCode: String, courseClss: Int, email: String) {
+        val key = "course:$courseCode:$courseClss:participants"
         redisTemplate.opsForSet().remove(key, email)
     }
 }

@@ -80,7 +80,11 @@ class UserService(
             UserCoursesDto(
                 courseId = it.course.courseId,
                 courseName = it.course.name,
-                courseCode = it.course.code
+                courseCode = it.course.code,
+                courseProfessor = it.course.professor,
+                courseClss = it.course.clss,
+                courseTerm = it.course.term,
+                courseYear = it.course.year
             )
         }
     }
@@ -112,6 +116,10 @@ class UserService(
                 courseId = it.course.courseId,
                 courseName = it.course.name,
                 courseCode = it.course.code,
+                courseProfessor = it.course.professor,
+                courseClss = it.course.clss,
+                courseTerm = it.course.term,
+                courseYear = it.course.year,
                 assignments = assignments.map { assignment ->
                     AssignmentDto(
                         assignmentId = assignment.assignmentId,
@@ -127,7 +135,7 @@ class UserService(
     }
 
     // 유저 강의 가입
-    fun joinCourse(email: String, courseId: Long) {
+    fun joinCourse(email: String, courseId: Long, courseKey: String) {
         val user = userRepository.findByEmail(email)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
 
@@ -137,6 +145,11 @@ class UserService(
         // 중복 가입 방지
         if (userCoursesRepository.existsByUserAndCourse(user, course)) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "User already enrolled in this course")
+        }
+
+        // courseKey 검증: 입력된 평문과 DB에 저장된 해시값을 비교
+        if (!passwordEncoder.matches(courseKey, course.courseKey)) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect course key")
         }
 
         // UserCourses 엔티티 저장
@@ -150,7 +163,7 @@ class UserService(
         // DB 저장 후 Redis 데이터 검증 및 동기화
         val storedUserCourse = userCoursesRepository.findByUserAndCourseCode(user, course.code)
         if (storedUserCourse != null) {
-            redisService.addUserToCourseList(course.code, email)
+            redisService.addUserToCourseList(course.code, course.clss, email)
         }
     }
 
@@ -174,7 +187,7 @@ class UserService(
         userCoursesRepository.delete(userCourse)
 
         // Redis에서 해당 강의의 참여자 목록에서 해당 유저(email) 제거
-        redisService.removeUserFromCourseList(course.code, email)
+        redisService.removeUserFromCourseList(course.code, course.clss, email)
     }
 
     @Transactional(readOnly = true)

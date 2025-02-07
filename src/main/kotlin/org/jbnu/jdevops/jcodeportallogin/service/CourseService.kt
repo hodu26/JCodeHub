@@ -7,15 +7,19 @@ import org.jbnu.jdevops.jcodeportallogin.entity.Course
 import org.jbnu.jdevops.jcodeportallogin.repo.AssignmentRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.CourseRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.UserCoursesRepository
+import org.jbnu.jdevops.jcodeportallogin.util.CourseKeyUtil
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.http.HttpStatus
+import org.springframework.security.crypto.password.PasswordEncoder
 
 @Service
 class CourseService(
     private val userCoursesRepository: UserCoursesRepository,
     private val assignmentRepository: AssignmentRepository,
-    private val courseRepository: CourseRepository
+    private val courseRepository: CourseRepository,
+    private val courseKeyUtil: CourseKeyUtil,
+    private val passwordEncoder: PasswordEncoder
 ) {
     // 강의별 유저 조회
     fun getUsersByCourse(courseId: Long): List<UserInfoDto> {
@@ -55,10 +59,48 @@ class CourseService(
         }
     }
 
+    // 강의 key 재발급
+    fun reissueCourseKey(courseId: Long): String {
+        val course = courseRepository.findById(courseId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
+
+        // 새 원본 key 생성
+        val newRawKey = courseKeyUtil.generateCourseEnrollmentCode(course.code, course.clss)
+
+        // 암호화하여 업데이트
+        val newEncryptedKey = passwordEncoder.encode(newRawKey)
+        course.courseKey = newEncryptedKey
+        courseRepository.save(course)
+
+        return newRawKey // 새 원본 key(평문)를 반환 (관리자에게 한 번만 노출)
+    }
+
     // 강의 추가
     fun createCourse(courseDto: CourseDto): CourseDto {
-        val course = courseRepository.save(Course(name = courseDto.name, code = courseDto.code))
-        return CourseDto(courseId = course.courseId, name = course.name, code = course.code)
+        // 랜덤 key를 생성하여 할당
+        val rawKey = courseKeyUtil.generateCourseEnrollmentCode(courseDto.code, courseDto.clss)
+        // PasswordEncoder를 사용해 암호화 (해싱) 처리
+        val encryptedKey = passwordEncoder.encode(rawKey)
+
+        val course = courseRepository.save(Course(
+            name = courseDto.name,
+            code = courseDto.code,
+            professor = courseDto.professor,
+            clss = courseDto.clss,
+            year = courseDto.year,
+            term = courseDto.term,
+            courseKey = encryptedKey
+        ))
+        return CourseDto(
+            courseId = course.courseId,
+            name = course.name,
+            code = course.code,
+            professor = course.professor,
+            clss = course.clss,
+            year = course.year,
+            term = course.term,
+            courseKey = rawKey
+        )
     }
 
     // 강의 수정
@@ -70,7 +112,11 @@ class CourseService(
         return CourseDto(
             courseId = updatedCourse.courseId,
             name = updatedCourse.name,
-            code = updatedCourse.code
+            code = updatedCourse.code,
+            professor = updatedCourse.professor,
+            clss = updatedCourse.clss,
+            year = updatedCourse.year,
+            term = updatedCourse.term
         )
     }
 

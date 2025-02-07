@@ -16,6 +16,16 @@ import org.springframework.web.server.ResponseStatusException
 @RequestMapping("/api/users")
 @PreAuthorize("hasRole('ADMIN')") // ADMIN 권한이 없는 사용자는 모두 접근 불가
 class AdminController(private val userService: UserService) {
+    // 모든 유저 조회
+    @Operation(
+        summary = "모든 유저 조회",
+        description = "모든 사용자 정보를 조회합니다."
+    )
+    @GetMapping
+    fun getAllUsers(): List<UserDto> {
+        return userService.getAllUsers()
+    }
+
     // 학생 계정 추가
     @Operation(summary = "학생 계정 추가", description = "관리자가 학생 계정을 추가합니다.")
     @PostMapping("/student")

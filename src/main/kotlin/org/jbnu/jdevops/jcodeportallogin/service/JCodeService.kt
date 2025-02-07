@@ -45,7 +45,7 @@ class JCodeService(
         // DB 저장 후 Redis 동기화
         val storedJcode = jCodeRepository.findByUserAndCourse(user, course)
         if (storedJcode != null) {
-            redisService.storeUserCourse(user.email, course.code, jcodeUrl)
+            redisService.storeUserCourse(user.email, course.code, course.clss, jcodeUrl)
         }
 
         return JCodeDto(
@@ -73,6 +73,6 @@ class JCodeService(
         userCoursesRepository.save(updatedUserCourse)
 
         // Redis에서도 해당 정보를 삭제
-        redisService.deleteUserCourse(user.email, course.code)
+        redisService.deleteUserCourse(user.email, course.code, course.clss)
     }
 }

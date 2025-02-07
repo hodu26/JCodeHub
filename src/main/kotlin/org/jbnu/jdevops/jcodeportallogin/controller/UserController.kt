@@ -19,16 +19,6 @@ class UserController(
     private val userService: UserService,
     private val jwtAuthService: JwtAuthService
 ) {
-    // 모든 유저 조회
-    @Operation(
-        summary = "모든 유저 조회",
-        description = "모든 사용자 정보를 조회합니다."
-    )
-    @GetMapping
-    fun getAllUsers(): List<UserDto> {
-        return userService.getAllUsers()
-    }
-
     // 유저 정보 조회
     @Operation(
         summary = "내 정보 조회",
@@ -86,21 +76,23 @@ class UserController(
     // 유저 강의 가입
     @Operation(
         summary = "강의 가입",
-        description = "현재 인증된 사용자가 특정 강의에 가입합니다."
+        description = "현재 인증된 사용자가 특정 강의에 가입합니다. 요청 본문에 courseKey를 포함해야 합니다."
     )
     @PostMapping("/me/courses/{courseId}")
     fun joinCourse(
         @PathVariable courseId: Long,
+        @RequestBody joinRequest: CourseJoinDto,
         request: HttpServletRequest,
         authentication: Authentication
     ): ResponseEntity<String> {
         val email = authentication.principal as? String
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
 
-        userService.joinCourse(email, courseId)
+        userService.joinCourse(email, courseId, joinRequest.courseKey)
 
         return ResponseEntity.ok("Successfully joined the course")
     }
+
 
 
     // 유저 강의 탈퇴
