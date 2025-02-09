@@ -17,6 +17,7 @@ class CourseController(
     private val courseService: CourseService
 ) {
     // 강의별 유저 조회
+
     @Operation(
         summary = "강의별 유저 조회",
         description = "특정 강의에 등록된 모든 사용자 정보를 조회합니다."
@@ -37,7 +38,7 @@ class CourseController(
     }
 
     // 강의 key 재발급 API (ADMIN, PROFESSOR 전용)
-    @Operation(summary = "강의 key 재발급", description = "특정 강의의 key를 재발급합니다.")
+    @Operation(summary = "강의 key 재발급", description = "특정 강의의 key를 재발급합니다. (ADMIN, PROFESSOR 전용)")
     @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSOR')")
     @GetMapping("/{courseId}/key")
     fun reissueCourseKey(@PathVariable courseId: Long): ResponseEntity<String> {

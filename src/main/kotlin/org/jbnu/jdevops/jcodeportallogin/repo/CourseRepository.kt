@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository
 interface CourseRepository : JpaRepository<Course, Long> {
     fun findByCode(code: String): Course?
     fun courseKey(courseKey: String): MutableList<Course>
+    fun findByCodeAndClss(code: String, clss: Int): List<Course>
 }

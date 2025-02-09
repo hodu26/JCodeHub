@@ -76,11 +76,10 @@ class UserController(
     // 유저 강의 가입
     @Operation(
         summary = "강의 가입",
-        description = "현재 인증된 사용자가 특정 강의에 가입합니다. 요청 본문에 courseKey를 포함해야 합니다."
+        description = "현재 인증된 사용자가 요청 본문에 포함된 courseKey를 이용해 가입합니다."
     )
-    @PostMapping("/me/courses/{courseId}")
+    @PostMapping("/me/courses")
     fun joinCourse(
-        @PathVariable courseId: Long,
         @RequestBody joinRequest: CourseJoinDto,
         request: HttpServletRequest,
         authentication: Authentication
@@ -88,11 +87,11 @@ class UserController(
         val email = authentication.principal as? String
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
 
-        userService.joinCourse(email, courseId, joinRequest.courseKey)
+        // courseId 대신, joinRequest.courseKey를 이용하여 강의를 조회하고 가입 처리
+        userService.joinCourse(email, joinRequest.courseKey)
 
         return ResponseEntity.ok("Successfully joined the course")
     }
-
 
 
     // 유저 강의 탈퇴

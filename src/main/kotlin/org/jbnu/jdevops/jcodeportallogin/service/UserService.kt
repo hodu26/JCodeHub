@@ -135,21 +135,32 @@ class UserService(
     }
 
     // 유저 강의 가입
-    fun joinCourse(email: String, courseId: Long, courseKey: String) {
+    fun joinCourse(email: String, courseKey: String) {
+        // 입력된 courseKey가 "code-clss-randomPart" 형식인지 확인하고, code와 clss 추출
+        val parts = courseKey.split("-")
+        if (parts.size < 3) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid course key format")
+        }
+        val courseCode = parts[0]
+        val courseClss = parts[1].toIntOrNull() ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid class value")
+
+        // courseCode와 courseClss를 기준으로 강의 목록 조회
+        val courses = courseRepository.findByCodeAndClss(courseCode, courseClss)
+        if (courses.isEmpty()) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found")
+        }
+
+        // 입력된 평문 courseKey와 DB에 저장된 해시된 courseKey를 비교하여 일치하는 강의 선택
+        val course = courses.firstOrNull { passwordEncoder.matches(courseKey, it.courseKey) }
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect course key")
+
+        // 사용자 조회
         val user = userRepository.findByEmail(email)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
-
-        val course = courseRepository.findById(courseId)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
 
         // 중복 가입 방지
         if (userCoursesRepository.existsByUserAndCourse(user, course)) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "User already enrolled in this course")
-        }
-
-        // courseKey 검증: 입력된 평문과 DB에 저장된 해시값을 비교
-        if (!passwordEncoder.matches(courseKey, course.courseKey)) {
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect course key")
         }
 
         // UserCourses 엔티티 저장
@@ -160,7 +171,7 @@ class UserService(
         )
         userCoursesRepository.save(userCourse)
 
-        // DB 저장 후 Redis 데이터 검증 및 동기화
+        // DB 저장 후 Redis 데이터 동기화: 강의 코드와 강의 분반(clss)을 함께 사용
         val storedUserCourse = userCoursesRepository.findByUserAndCourseCode(user, course.code)
         if (storedUserCourse != null) {
             redisService.addUserToCourseList(course.code, course.clss, email)
