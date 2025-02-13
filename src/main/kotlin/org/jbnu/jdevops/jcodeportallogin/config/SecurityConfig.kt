@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse
 import jakarta.servlet.http.HttpSessionEvent
 import jakarta.servlet.http.HttpSessionListener
 import org.jbnu.jdevops.jcodeportallogin.security.KeycloakAuthFilter
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -17,6 +18,11 @@ import org.springframework.web.cors.CorsConfiguration
 
 @Configuration
 class SecurityConfig {
+    @Value("\${front.domain}")
+    private lateinit var frontDomain: String
+
+    @Value("\${nodejs.domain}")
+    private lateinit var nodejsDomain: String
 
     @Bean
     fun securityFilterChain(http: HttpSecurity, keycloakAuthFilter: KeycloakAuthFilter): SecurityFilterChain {
@@ -25,10 +31,10 @@ class SecurityConfig {
             .cors { cors ->
                 cors.configurationSource {
                     val configuration = CorsConfiguration()
-                    configuration.allowedOrigins = listOf("http://localhost:3000")
+                    configuration.allowedOrigins = listOf(frontDomain, nodejsDomain)
                     configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
                     configuration.allowedHeaders = listOf("*")
-                    configuration.exposedHeaders = listOf("Authorization")
+                    configuration.exposedHeaders = listOf("Authorization", "Set-Cookie")
                     configuration.allowCredentials = true
                     configuration
                 }
