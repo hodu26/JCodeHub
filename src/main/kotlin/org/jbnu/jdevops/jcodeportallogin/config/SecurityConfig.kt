@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse
 import jakarta.servlet.http.HttpSessionEvent
 import jakarta.servlet.http.HttpSessionListener
 import org.jbnu.jdevops.jcodeportallogin.security.CustomAuthenticationSuccessHandler
+import org.jbnu.jdevops.jcodeportallogin.security.CustomLogoutSuccessHandler
 import org.jbnu.jdevops.jcodeportallogin.security.KeycloakAuthFilter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -27,12 +28,13 @@ class SecurityConfig {
 
     @Bean
     fun securityFilterChain(http: HttpSecurity, keycloakAuthFilter: KeycloakAuthFilter,
-                            customAuthenticationSuccessHandler: CustomAuthenticationSuccessHandler
+                            customAuthenticationSuccessHandler: CustomAuthenticationSuccessHandler,
+                            customLogoutSuccessHandler: CustomLogoutSuccessHandler
     ): SecurityFilterChain {
         http
             // CSRF 보호 활성화하되, API 경로는 CSRF 검증에서 제외 (필요에 따라 조정)
             .csrf { csrf ->
-                csrf.ignoringRequestMatchers("/api/**")
+                csrf.ignoringRequestMatchers("/api/**", "/login", "/logout")
             }
             .cors { cors ->
                 cors.configurationSource {
@@ -65,6 +67,7 @@ class SecurityConfig {
                 logout
                     .logoutUrl("/logout")
                     .logoutSuccessUrl("/")
+                    .logoutSuccessHandler(customLogoutSuccessHandler)
                     .invalidateHttpSession(true)
                     .deleteCookies("JSESSIONID")
             }
