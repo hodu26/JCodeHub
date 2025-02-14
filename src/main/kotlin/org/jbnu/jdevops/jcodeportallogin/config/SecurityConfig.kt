@@ -64,13 +64,13 @@ class SecurityConfig {
             .logout { logout ->
                 logout
                     .logoutUrl("/logout")
-                    .logoutSuccessUrl("/login")
+                    .logoutSuccessUrl("/")
                     .invalidateHttpSession(true)
                     .deleteCookies("JSESSIONID")
             }
             .sessionManagement { sessionManagement ->
-                sessionManagement.sessionFixation { it.migrateSession() }
-                sessionManagement.maximumSessions(1)
+                sessionManagement.sessionFixation { it.migrateSession() }  // 세션 고정 보호
+                sessionManagement.maximumSessions(1)  // 동시 세션 1개로 제한
             }
             // JWT 기반 인증 필터 추가 (Keycloak 검증)
             .addFilterBefore(keycloakAuthFilter, UsernamePasswordAuthenticationFilter::class.java)

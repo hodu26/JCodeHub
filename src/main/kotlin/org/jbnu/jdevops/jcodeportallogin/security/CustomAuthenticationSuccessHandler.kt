@@ -4,9 +4,12 @@ import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.jbnu.jdevops.jcodeportallogin.entity.RoleType
+import org.jbnu.jdevops.jcodeportallogin.entity.User
 import org.jbnu.jdevops.jcodeportallogin.repo.UserRepository
 import org.jbnu.jdevops.jcodeportallogin.service.token.JwtAuthService
 import org.jbnu.jdevops.jcodeportallogin.service.token.KeycloakAuthService
+import org.jbnu.jdevops.jcodeportallogin.util.JwtUtil
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
@@ -21,8 +24,10 @@ import java.io.IOException
 class CustomAuthenticationSuccessHandler(
     private val keycloakAuthService: KeycloakAuthService,
     private val jwtAuthService: JwtAuthService,
-    private val authorizedClientService: OAuth2AuthorizedClientService, // OAuth2AuthorizedClientService 주입
-    private val userRepository: UserRepository
+    private val authorizedClientService: OAuth2AuthorizedClientService,
+    private val userRepository: UserRepository,
+    @Value("\${front.domain}") private val frontDomain: String,
+    private val jwtUtil: JwtUtil,
 ) : AuthenticationSuccessHandler {
 
     @Throws(IOException::class, ServletException::class)
@@ -31,7 +36,7 @@ class CustomAuthenticationSuccessHandler(
         response: HttpServletResponse,
         authentication: org.springframework.security.core.Authentication
     ) {
-        // 1. OAuth2AuthenticationToken으로 캐스팅하여, OAuth2AuthorizedClientService를 통해 Keycloak access token을 가져옴.
+        // 1. OAuth2AuthenticationToken으로 캐스팅하고, OAuth2AuthorizedClientService를 통해 Keycloak access token을 가져옴.
         val oauth2Auth = authentication as OAuth2AuthenticationToken
         val authorizedClient = authorizedClientService.loadAuthorizedClient<OAuth2AuthorizedClient>(
             oauth2Auth.authorizedClientRegistrationId,
@@ -55,23 +60,27 @@ class CustomAuthenticationSuccessHandler(
             return
         }
 
-        // 3. DB에서 사용자의 역할 조회 (UserService를 통해)
-        //    만약 DB에 역할이 없다면 기본으로 STUDENT 역할 사용
-        val roleFromDb: RoleType? = userRepository.getRoleByEmail(email)
-        val role: RoleType = roleFromDb ?: RoleType.STUDENT
+        // 3. DB에서 사용자 조회; 없으면 회원가입 (기본 STUDENT 역할 부여)
+        val user = userRepository.findByEmail(email) ?: userRepository.save(
+            User(
+                email = email,
+                role = RoleType.STUDENT,
+            )
+        )
+        var role = user.role
 
-        // 4. 자체 JWT 토큰 발급 (JwtAuthService 사용)
+        // 4. 자체 JWT 토큰 발급
         val jwtToken = jwtAuthService.createToken(email, role)
 
-        // 5. 자체 JWT 토큰을 응답 헤더(또는 쿠키 등)로 클라이언트에 전달
-        response.setHeader("Authorization", "Bearer $jwtToken")
+        // 5. JWT 토큰을 HttpOnly 쿠키로 전송
+        response.addCookie(jwtUtil.createJwtCookie("jwt", jwtToken))
 
-        // 6. SecurityContext에도 인증 정보 저장 (필요 시)
+        // 6. SecurityContext에도 인증 정보 저장 (옵션)
         val authorities = listOf(SimpleGrantedAuthority("ROLE_${role.name}"))
         val authToken = UsernamePasswordAuthenticationToken(email, null, authorities)
         SecurityContextHolder.getContext().authentication = authToken
 
-        // 7. 로그인 성공 후 원하는 페이지로 리다이렉트 (또는 JSON 응답 등으로 처리)
-        response.sendRedirect("/login/success")
+        // 7. 로그인 성공 후 프론트엔드 URL로 리다이렉트
+        response.sendRedirect("$frontDomain/login/success")
     }
 }
