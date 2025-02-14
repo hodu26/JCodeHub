@@ -9,7 +9,6 @@ class JwtUtil (
     @Value("\${jwt.cookie.domain}")
     private val cookieDomain: String
 ) {
-
     fun createJwtCookie(name: String, jwt: String): Cookie {
         return Cookie(name, jwt).apply {
             isHttpOnly = true  // XSS 공격 방지
@@ -18,6 +17,17 @@ class JwtUtil (
             maxAge = 3600      // 1시간 동안 유효
             setAttribute("SameSite", "None")  // 리다이렉션 시 쿠키 유지
             domain = cookieDomain // 쿠키를 모든 하위 도메인에서 사용 가능하도록 설정
+        }
+    }
+
+    fun createExpiredCookie(name: String): Cookie {
+        return Cookie(name, null).apply {
+            isHttpOnly = true
+            secure = true
+            path = "/"
+            maxAge = 0
+            setAttribute("SameSite", "None")
+            domain = cookieDomain
         }
     }
 }

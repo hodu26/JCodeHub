@@ -41,7 +41,7 @@ class AuthService(
             val roleType = when {
                 roles.any { it.equals("ROLE_ADMIN", ignoreCase = true) } -> RoleType.ADMIN
                 roles.any { it.equals("ROLE_PROFESSOR", ignoreCase = true) } -> RoleType.PROFESSOR
-                roles.any { it.equals("ROLE_ASSISTANT", ignoreCase = true) } -> RoleType.ASSISTANCE
+                roles.any { it.equals("ROLE_ASSISTANT", ignoreCase = true) } -> RoleType.ASSISTANT
                 else -> RoleType.STUDENT
             }
 
