@@ -41,6 +41,10 @@ class AuthController(
 
     // jwt token refresh
     @PostMapping("/refresh")
+    @Operation(
+        summary = "JWT 토큰 리프레시",
+        description = "HTTP 요청에 포함된 refresh token 쿠키를 검증하여, 유효할 경우 새로운 Access 토큰(응답 헤더)과 Refresh 토큰(쿠키)을 발급합니다."
+    )
     fun refreshToken(request: HttpServletRequest, response: HttpServletResponse): ResponseEntity<Map<String, String>> {
         return try {
             val result = authService.refreshTokens(request, response)

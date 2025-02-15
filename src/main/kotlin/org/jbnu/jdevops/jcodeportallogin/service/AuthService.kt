@@ -28,7 +28,7 @@ class AuthService(
         val user = userRepository.findByEmail(loginUserDto.email)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
 
-        val login = loginRepository.findByUser_UserId(user.userId)
+        val login = loginRepository.findByUserId(user.id)
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials")
 
         if (!passwordEncoder.matches(loginUserDto.password, login.password)) {
