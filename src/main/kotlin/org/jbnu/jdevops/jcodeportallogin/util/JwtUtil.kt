@@ -1,6 +1,7 @@
 package org.jbnu.jdevops.jcodeportallogin.util
 
 import jakarta.servlet.http.Cookie
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
@@ -29,5 +30,12 @@ class JwtUtil (
             setAttribute("SameSite", "None")
             domain = cookieDomain
         }
+    }
+
+    fun extractBearerToken(request: HttpServletRequest): String? {
+        val authHeader = request.getHeader("Authorization")
+        return if (!authHeader.isNullOrEmpty() && authHeader.startsWith("Bearer ")) {
+            authHeader.substringAfter("Bearer ").trim()
+        } else null
     }
 }

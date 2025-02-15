@@ -34,9 +34,8 @@ class CustomLogoutSuccessHandler(
         SecurityContextHolder.clearContext()
 
         // 2. 자체 JWT 쿠키 추출 (쿠키 이름 "jwt"라고 가정)
-        val authHeader = request.getHeader("Authorization")
-        if (!authHeader.isNullOrEmpty() && authHeader.startsWith("Bearer ")) {
-            val accessToken = authHeader.substringAfter("Bearer ").trim()
+        val accessToken = jwtUtil.extractBearerToken(request)
+        if (!accessToken.isNullOrEmpty()) {
             // JWT 클레임에서 만료시간 가져오기
             val jwtClaims: Claims = jwtAuthService.getClaims(accessToken)
             val ttlMillis = jwtClaims.expiration.time - System.currentTimeMillis()
@@ -54,7 +53,7 @@ class CustomLogoutSuccessHandler(
             // refresh token도 블랙리스트에 추가 (남은 TTL로 설정)
             redisService.addToJwtBlacklist(refresh, refreshTtlMillis)
 
-            // 기존 Redis에 저장된 refresh token 삭제 (이메일을 통해 관리하고 있다면)
+            // 기존 Redis에 저장된 refresh token 삭제
             val email = authentication?.principal?.toString()
             if (email != null) {
                 redisService.deleteRefreshToken(email)
@@ -73,7 +72,7 @@ class CustomLogoutSuccessHandler(
             }
         }
 
-        // 5. Keycloak 로그아웃 URL 구성: id_token_hint 포함 (있다면)
+        // 5. Keycloak 로그아웃 URL 구성: id_token_hint 포함
         val redirectUri = "$frontDomain/"
         val keycloakLogoutRedirectUrl = if (!idToken.isNullOrEmpty()) {
             "$keycloakLogoutUrl?id_token_hint=$idToken&post_logout_redirect_uri=$redirectUri"

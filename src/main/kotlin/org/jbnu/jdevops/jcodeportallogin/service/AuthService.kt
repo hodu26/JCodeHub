@@ -5,7 +5,6 @@ import jakarta.servlet.http.HttpServletResponse
 import org.jbnu.jdevops.jcodeportallogin.dto.LoginUserDto
 
 import org.jbnu.jdevops.jcodeportallogin.entity.RoleType
-import org.jbnu.jdevops.jcodeportallogin.entity.User
 import org.jbnu.jdevops.jcodeportallogin.repo.LoginRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.UserRepository
 import org.jbnu.jdevops.jcodeportallogin.service.token.JwtAuthService
@@ -41,11 +40,8 @@ class AuthService(
         return mapOf("message" to "Login successful", "token" to jwt)
     }
 
-    /**
-     * Refresh tokens using the refresh token provided in cookie.
-     * 검증: refresh token 유효성, 블랙리스트, Redis에 저장된 값 일치 여부 확인
-     * 재발급: 새로운 access token과 refresh token 생성 후 Redis 및 쿠키 갱신
-     */
+    // 검증: refresh token 유효성, 블랙리스트, Redis에 저장된 값 일치 여부 확인
+    // 재발급: 새로운 access token과 refresh token 생성 후 Redis 및 쿠키/헤더 갱신 (RTR)
     fun refreshTokens(request: HttpServletRequest, response: HttpServletResponse): Map<String, String> {
         // 1. refresh token 추출 (쿠키 이름 "refreshToken")
         val refreshToken = request.cookies?.firstOrNull { it.name == "refreshToken" }?.value
@@ -81,34 +77,13 @@ class AuthService(
         val newAccessToken = jwtAuthService.createToken(email, role)
         val newRefreshToken = jwtAuthService.createRefreshToken(email, role)
 
-        // 7. 업데이트: Redis와 쿠키에 새로운 refresh token 저장
+        // 7. 업데이트: Redis에 새로운 refresh token 저장 및 쿠키/헤더 갱신
         redisService.storeRefreshToken(email, newRefreshToken)
-        response.addCookie(jwtUtil.createJwtCookie("jwt", newAccessToken))
+        // Access Token은 응답 헤더에 "Bearer" 형식으로 전달
+        response.setHeader("Authorization", "Bearer $newAccessToken")
+        // Refresh Token은 쿠키로 갱신
         response.addCookie(jwtUtil.createJwtCookie("refreshToken", newRefreshToken))
 
         return mapOf("message" to "Tokens refreshed")
     }
-
-//    fun oidcLogin(email: String, roles: List<String>): Map<String, String> {
-//        try {
-//            val roleType = when {
-//                roles.any { it.equals("ROLE_ADMIN", ignoreCase = true) } -> RoleType.ADMIN
-//                roles.any { it.equals("ROLE_PROFESSOR", ignoreCase = true) } -> RoleType.PROFESSOR
-//                roles.any { it.equals("ROLE_ASSISTANT", ignoreCase = true) } -> RoleType.ASSISTANT
-//                else -> RoleType.STUDENT
-//            }
-//
-//            // 데이터베이스에서 사용자 확인 후 저장
-//            val user = userRepository.findByEmail(email) ?: userRepository.save(
-//                User(
-//                    email = email,
-//                    role = roleType,
-//                )
-//            )
-//
-//            return mapOf("message" to "Login successful", "role" to user.role.name)
-//        } catch (e: Exception) {
-//            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "OIDC Login failed")
-//        }
-//    }
 }

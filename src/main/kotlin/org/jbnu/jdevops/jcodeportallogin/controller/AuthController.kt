@@ -8,10 +8,8 @@ import org.jbnu.jdevops.jcodeportallogin.dto.LoginUserDto
 import org.jbnu.jdevops.jcodeportallogin.dto.RegisterUserDto
 import org.jbnu.jdevops.jcodeportallogin.service.*
 import org.jbnu.jdevops.jcodeportallogin.util.JwtUtil
-import org.springframework.web.server.ResponseStatusException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
 
 @Tag(name = "Auth API", description = "인증 및 회원가입 관련 API")
@@ -51,39 +49,4 @@ class AuthController(
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to ex.message!!))
         }
     }
-
-    // keycloak session refresh
-    @GetMapping("/session/refresh")
-    fun refreshSession(request: HttpServletRequest): ResponseEntity<Map<String, String>> {
-        // 현재 세션이 존재하면, 세션 만료 시간을 연장합니다.
-        val session = request.session
-        if (session != null) {
-            // 예: 세션 최대 유효 시간을 1시간으로 재설정
-            session.maxInactiveInterval = 3600 // 초 단위
-            return ResponseEntity.ok(mapOf("message" to "Session refreshed"))
-        }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-            .body(mapOf("error" to "No active session"))
-    }
-
-//    // KeyCloak 로그인 ( STUDENT )
-//    @Operation(
-//        summary = "KeyCloak 로그인 (STUDENT)",
-//        description = "STUDENT 역할의 사용자가 KeyCloak을 통해 로그인을 수행합니다. 인증된 사용자의 이메일과 역할 정보를 기반으로 로그인 처리를 진행합니다."
-//    )
-//    @GetMapping("/login/oidc/success")
-//    fun loginOidcSuccess(
-//        authentication: Authentication,
-//        response: HttpServletResponse
-//    ): ResponseEntity<Map<String, String>> {
-//
-//        val email = authentication.principal as? String
-//            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
-//
-//        val roles = authentication.authorities.map { it.authority }
-//
-//        // 기존 서비스 로직 유지
-//        val result = authService.oidcLogin(email, roles)
-//        return ResponseEntity.ok(result)
-//    }
 }

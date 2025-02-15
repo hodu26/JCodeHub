@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse
 import io.jsonwebtoken.Claims
 import org.jbnu.jdevops.jcodeportallogin.entity.RoleType
 import org.jbnu.jdevops.jcodeportallogin.service.token.JwtAuthService
+import org.jbnu.jdevops.jcodeportallogin.util.JwtUtil
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
@@ -15,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Component
 class JwtAuthenticationFilter(
     private val jwtAuthService: JwtAuthService,
+    private val jwtUtil: JwtUtil,
 ) : OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -23,10 +25,7 @@ class JwtAuthenticationFilter(
         filterChain: FilterChain
     ) {
         // "Authorization" 헤더에서 "Bearer {token}" 형식으로 Access Token 추출
-        val authHeader = request.getHeader("Authorization")
-        val accessToken = if (!authHeader.isNullOrEmpty() && authHeader.startsWith("Bearer ")) {
-            authHeader.substringAfter("Bearer ").trim()
-        } else null
+        val accessToken = jwtUtil.extractBearerToken(request)
 
         if (!accessToken.isNullOrEmpty() && jwtAuthService.validateToken(accessToken)) {
             // access token이 유효하면, SecurityContext에 설정
