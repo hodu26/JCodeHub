@@ -1,9 +1,11 @@
 package org.jbnu.jdevops.jcodeportallogin.security
 
+import io.jsonwebtoken.Claims
 import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.jbnu.jdevops.jcodeportallogin.service.RedisService
+import org.jbnu.jdevops.jcodeportallogin.service.token.JwtAuthService
 import org.jbnu.jdevops.jcodeportallogin.util.JwtUtil
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.core.Authentication
@@ -11,14 +13,14 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler
 import org.springframework.stereotype.Component
 import java.io.IOException
-import java.util.concurrent.TimeUnit
 
 @Component
 class CustomLogoutSuccessHandler(
     private val redisService: RedisService,
     @Value("\${keycloak.logout.url}") private val keycloakLogoutUrl: String, // Keycloak 로그아웃 엔드포인트
     @Value("\${front.domain}") private val frontDomain: String, // 프론트엔드 도메인
-    private val jwtUtil: JwtUtil
+    private val jwtUtil: JwtUtil,
+    private val jwtAuthService: JwtAuthService
 ) : LogoutSuccessHandler {
 
     @Throws(IOException::class, ServletException::class)
@@ -32,18 +34,36 @@ class CustomLogoutSuccessHandler(
         SecurityContextHolder.clearContext()
 
         // 2. 자체 JWT 쿠키 추출 (쿠키 이름 "jwt"라고 가정)
-        val jwtCookie = request.cookies?.firstOrNull { it.name == "jwt" }
-        if (jwtCookie != null) {
-            val jwt = jwtCookie.value
-            // 3. 자체 JWT 블랙리스트에 저장 (토큰의 TTL을 1시간으로 설정)
-            redisService.addToJwtBlacklist(jwt, 1, TimeUnit.HOURS)
-
-            // 4. JWT 쿠키 제거 (maxAge=0)
-            response.addCookie(jwtUtil.createExpiredCookie(jwtCookie.name))
+        val authHeader = request.getHeader("Authorization")
+        if (!authHeader.isNullOrEmpty() && authHeader.startsWith("Bearer ")) {
+            val accessToken = authHeader.substringAfter("Bearer ").trim()
+            // JWT 클레임에서 만료시간 가져오기
+            val jwtClaims: Claims = jwtAuthService.getClaims(accessToken)
+            val ttlMillis = jwtClaims.expiration.time - System.currentTimeMillis()
+            // JWT 블랙리스트에 추가 (남은 TTL로 설정)
+            redisService.addToJwtBlacklist(accessToken, ttlMillis)
         }
 
-        // 5. Redis에서 id_token 조회 및 삭제
-        // 여기서는 authentication.principal에서 사용자를 식별할 수 있는 값(예: 이메일)을 가져온다고 가정
+        // 3. refresh token 쿠키 추출 (쿠키 이름 "refreshToken")
+        val refreshCookie = request.cookies?.firstOrNull { it.name == "refreshToken" }
+        if (refreshCookie != null) {
+            val refresh = refreshCookie.value
+            // refresh token 클레임에서 만료시간 가져오기
+            val refreshClaims: Claims = jwtAuthService.getClaims(refresh)
+            val refreshTtlMillis = refreshClaims.expiration.time - System.currentTimeMillis()
+            // refresh token도 블랙리스트에 추가 (남은 TTL로 설정)
+            redisService.addToJwtBlacklist(refresh, refreshTtlMillis)
+
+            // 기존 Redis에 저장된 refresh token 삭제 (이메일을 통해 관리하고 있다면)
+            val email = authentication?.principal?.toString()
+            if (email != null) {
+                redisService.deleteRefreshToken(email)
+            }
+            // refresh token 쿠키 만료
+            response.addCookie(jwtUtil.createExpiredCookie(refreshCookie.name))
+        }
+
+        // 4. Redis에서 id_token 조회 및 삭제
         val email = authentication?.principal?.toString()
         var idToken: String? = null
         if (email != null) {
@@ -53,15 +73,15 @@ class CustomLogoutSuccessHandler(
             }
         }
 
-        // 6. Keycloak 로그아웃 URL 구성: id_token_hint가 있으면 포함
+        // 5. Keycloak 로그아웃 URL 구성: id_token_hint 포함 (있다면)
         val redirectUri = "$frontDomain/"
         val keycloakLogoutRedirectUrl = if (!idToken.isNullOrEmpty()) {
-            "$keycloakLogoutUrl?id_token_hint=$idToken&redirect_url=$redirectUri"
+            "$keycloakLogoutUrl?id_token_hint=$idToken&post_logout_redirect_uri=$redirectUri"
         } else {
-            "$keycloakLogoutUrl?redirect_url=$redirectUri"
+            "$keycloakLogoutUrl?post_logout_redirect_uri=$redirectUri"
         }
 
-        // 7. Keycloak 로그아웃 엔드포인트로 리다이렉트 (이 과정에서 Keycloak 세션 만료 처리)
+        // 6. Keycloak 로그아웃 엔드포인트로 리다이렉트
         response.sendRedirect(keycloakLogoutRedirectUrl)
     }
 }

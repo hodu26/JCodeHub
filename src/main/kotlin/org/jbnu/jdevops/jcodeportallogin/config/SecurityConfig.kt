@@ -12,6 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository
 import org.springframework.web.cors.CorsConfiguration
 
 @Configuration
@@ -29,10 +30,10 @@ class SecurityConfig {
                             jwtAuthenticationFilter: JwtAuthenticationFilter
     ): SecurityFilterChain {
         http
-            // CSRF 보호 활성화하되, API 경로는 CSRF 검증에서 제외 (필요에 따라 조정)
-            .csrf { csrf ->
-                csrf.ignoringRequestMatchers("/api/**", "/oidc/login", "/logout")
-            }
+//            // CSRF 보호 활성화하되, API 경로는 CSRF 검증에서 제외 (필요에 따라 조정)
+//            .csrf { csrf ->
+//                csrf.ignoringRequestMatchers("/api/**", "/oidc/login", "/logout")
+//            }
             .cors { cors ->
                 cors.configurationSource {
                     val configuration = CorsConfiguration()
