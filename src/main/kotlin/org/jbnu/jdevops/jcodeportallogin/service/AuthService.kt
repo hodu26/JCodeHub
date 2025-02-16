@@ -65,32 +65,36 @@ class AuthService(
         return jwtAuthService.createToken(email, role)
     }
 
-    // 검증: refresh token 유효성, 블랙리스트, Redis에 저장된 값 일치 여부 확인
+    // 검증: access, refresh token 유효성, 블랙리스트, Redis에 저장된 값 일치 여부 확인
     // 재발급: 새로운 access token과 refresh token 생성 후 Redis 및 쿠키/헤더 갱신 (RTR)
     fun refreshTokens(request: HttpServletRequest, response: HttpServletResponse): Map<String, String> {
-        // 1. 쿠키에서 refresh token 추출
+        // 1. 쿠키에서 refresh token 추출 (쿠키 이름 "refreshToken")
         val refreshToken = jwtUtil.extractCookieToken(request, "refreshToken")
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No refresh token provided")
 
-        // 2. refresh token의 클레임에서 사용자 정보 추출
+        // 2. "Authorization" 헤더에서 access token 추출
+        val accessToken = jwtUtil.extractBearerToken(request)
+        if (accessToken.isNullOrEmpty() || !jwtAuthService.validateToken(accessToken)) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Access token invalid or expired")
+        }
+
+        // 3. refresh token의 클레임에서 사용자 정보 추출
         val email = jwtAuthService.extractEmail(refreshToken)
 
-        // 3. refresh token 검증
+        // 4. refresh token 검증 (유효성, 블랙리스트, Redis 저장값 일치 여부 확인)
         RefreshTokenUtil.validate(refreshToken, jwtAuthService, redisService, email)
 
-        // 4. 사용자 조회
+        // 5. 사용자 조회
         val user = userRepository.findByEmail(email)
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found")
         val role = user.role
 
-        // 5. 새 access token 및 refresh token 생성 (RTR 적용)
+        // 6. 새 access token 및 refresh token 생성 (RTR 적용)
         val newAccessToken = jwtAuthService.createToken(email, role)
         val newRefreshToken = jwtAuthService.createRefreshToken(email, role)
 
-        // 6. 업데이트: Redis에 새로운 refresh token 저장 및 쿠키/헤더 갱신
+        // 7. 업데이트: Redis에 새로운 refresh token 저장 및 쿠키/헤더 갱신
         redisService.storeRefreshToken(email, newRefreshToken)
-
-        // 7. Token 전달 (Access - header, Refresh - cookie)
         response.setHeader("Authorization", "Bearer $newAccessToken")
         response.addCookie(jwtUtil.createJwtCookie("refreshToken", newRefreshToken))
 

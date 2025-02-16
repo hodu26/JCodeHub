@@ -11,6 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
+import org.springframework.util.AntPathMatcher
 import org.springframework.web.filter.OncePerRequestFilter
 
 @Component
@@ -46,8 +47,14 @@ class JwtAuthenticationFilter(
         filterChain.doFilter(request, response)
     }
 
-    // access token 반환 api에선 필터 제외
+    // access token 인증을 제외할 엔드포인트 설정
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
-        return request.requestURI == "/api/auth/token"
+        val matcher = AntPathMatcher()  // 와일드카드 패턴 허용 (**)
+        val excludedPaths = listOf(
+            "/api/auth/token",                          // access token 발급 엔드포인트
+            "/swagger-ui/**", "/v3/api-docs/**",        // swagger 관련 엔드포인트
+        )
+
+        return excludedPaths.any { matcher.match(it, request.requestURI) }
     }
 }

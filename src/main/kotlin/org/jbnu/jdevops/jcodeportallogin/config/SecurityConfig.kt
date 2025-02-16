@@ -3,7 +3,6 @@ package org.jbnu.jdevops.jcodeportallogin.config
 import org.jbnu.jdevops.jcodeportallogin.security.CustomAuthenticationSuccessHandler
 import org.jbnu.jdevops.jcodeportallogin.security.CustomLogoutSuccessHandler
 import org.jbnu.jdevops.jcodeportallogin.security.JwtAuthenticationFilter
-import org.jbnu.jdevops.jcodeportallogin.security.KeycloakAuthFilter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -24,16 +23,16 @@ class SecurityConfig {
     private lateinit var nodejsDomain: String
 
     @Bean
-    fun securityFilterChain(http: HttpSecurity, keycloakAuthFilter: KeycloakAuthFilter,
+    fun securityFilterChain(http: HttpSecurity,
                             customAuthenticationSuccessHandler: CustomAuthenticationSuccessHandler,
                             customLogoutSuccessHandler: CustomLogoutSuccessHandler,
                             jwtAuthenticationFilter: JwtAuthenticationFilter
     ): SecurityFilterChain {
         http
-//            // CSRF 보호 활성화하되, API 경로는 CSRF 검증에서 제외 (필요에 따라 조정)
-//            .csrf { csrf ->
-//                csrf.ignoringRequestMatchers("/api/**", "/oidc/login", "/logout")
-//            }
+            // CSRF 보호 활성화하되, API 경로는 CSRF 검증에서 제외 (필요에 따라 조정)
+            .csrf { csrf ->
+                csrf.ignoringRequestMatchers("/api/**", "/oidc/login", "/logout")
+            }
             .cors { cors ->
                 cors.configurationSource {
                     val configuration = CorsConfiguration()
