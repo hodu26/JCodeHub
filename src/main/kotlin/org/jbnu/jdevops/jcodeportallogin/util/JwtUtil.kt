@@ -32,10 +32,16 @@ class JwtUtil (
         }
     }
 
+    // access token을 헤더에서 추출하는 함수
     fun extractBearerToken(request: HttpServletRequest): String? {
         val authHeader = request.getHeader("Authorization")
         return if (!authHeader.isNullOrEmpty() && authHeader.startsWith("Bearer ")) {
             authHeader.substringAfter("Bearer ").trim()
         } else null
+    }
+
+    // refresh token을 쿠키에서 추출하는 함수
+    fun extractCookieToken(request: HttpServletRequest, cookieName: String): String? {
+        return request.cookies?.firstOrNull { it.name == cookieName }?.value
     }
 }

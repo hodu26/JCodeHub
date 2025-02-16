@@ -39,6 +39,12 @@ class AuthController(
         return ResponseEntity.ok(result)
     }
 
+    @GetMapping("/token")
+    fun getAccessToken(request: HttpServletRequest): ResponseEntity<Map<String, String>> {
+        val accessToken = authService.getAccessToken(request)
+        return ResponseEntity.ok(mapOf("accessToken" to accessToken))
+    }
+
     // jwt token refresh
     @PostMapping("/refresh")
     @Operation(

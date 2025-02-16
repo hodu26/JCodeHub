@@ -45,4 +45,9 @@ class JwtAuthenticationFilter(
 
         filterChain.doFilter(request, response)
     }
+
+    // access token 반환 api에선 필터 제외
+    override fun shouldNotFilter(request: HttpServletRequest): Boolean {
+        return request.requestURI == "/api/auth/token"
+    }
 }

@@ -79,20 +79,17 @@ class CustomAuthenticationSuccessHandler(
         // 5. 자체 발급 refresh token 생성 및 Redis 해시("user:refresh_tokens")에 저장
         val myRefreshToken = jwtAuthService.createRefreshToken(email, role)
         redisService.storeRefreshToken(email, myRefreshToken)
-        // refresh token을 HttpOnly 쿠키로 전달 (옵션)
+        // refresh token을 HttpOnly 쿠키로 전달
         response.addCookie(jwtUtil.createJwtCookie("refreshToken", myRefreshToken))
 
-        // 6. 자체 JWT 토큰(Access token) 발급
-        val jwtToken = jwtAuthService.createToken(email, role)
-        // 7. 자체 JWT 토큰을 응답 헤더에 "Authorization: Bearer {token}" 형식으로 전송
-        response.setHeader("Authorization", "Bearer $jwtToken")
+        // 6. 자체 JWT 토큰(Access token) 발급 및 전달은 /api/auth/token로 수행
 
-        // 8. SecurityContext에 인증 정보 저장 (옵션)
+        // 7. SecurityContext에 인증 정보 저장 (옵션)
         val authorities = listOf(SimpleGrantedAuthority("ROLE_${role.name}"))
         val authToken = UsernamePasswordAuthenticationToken(email, null, authorities)
         SecurityContextHolder.getContext().authentication = authToken
 
-        // 9. 로그인 성공 후 프론트엔드 URL로 리다이렉트
+        // 8. 로그인 성공 후 프론트엔드 URL로 리다이렉트
         response.sendRedirect("$frontDomain/login/success")
     }
 }
