@@ -17,9 +17,9 @@ import org.springframework.data.redis.serializer.StringRedisSerializer
 @Configuration
 @EnableRedisRepositories(basePackages = ["org.jbnu.jdevops.jcodeportallogin.repo.redis"]) // Redis 전용 리포지토리만 사용
 class RedisConfig(
-    @Value("\${spring.redis.host}") private val redisHost: String,
-    @Value("\${spring.redis.port}") private val redisPort: Int,
-    @Value("\${spring.redis.password}") private val redisPassword: String
+    @Value("\${redis.host}") private val redisHost: String,
+    @Value("\${redis.port}") private val redisPort: Int,
+    @Value("\${redis.password}") private val redisPassword: String
 ) {
 
     @Bean

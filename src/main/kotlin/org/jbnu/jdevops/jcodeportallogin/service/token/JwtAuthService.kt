@@ -12,8 +12,8 @@ import java.util.*
 class JwtAuthService(
     @Value("\${jwt.secret}") private val secretKey: String,
     @Value("\${jwt.expire}") private val expireTime: Long,
-    @Value("\${jwt.secret}") private val refreshSecretKey: String,
-    @Value("\${jwt.expire}") private val refreshExpireTime: Long
+    @Value("\${jwt.refresh.secret}") private val refreshSecretKey: String,
+    @Value("\${jwt.refresh.expire}") private val refreshExpireTime: Long
 ) {
 
     fun createToken(email: String, role: RoleType): String {
@@ -73,6 +73,7 @@ class JwtAuthService(
         }
     }
 
+    // 리프레시 토큰 검증
     fun validateRefreshToken(token: String): Boolean {
         return try {
             val claims = Jwts.parserBuilder()

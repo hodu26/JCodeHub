@@ -41,6 +41,8 @@ class AuthService(
         return mapOf("message" to "Login successful", "token" to jwt)
     }
 
+    // 검증: refresh token, session 유효성 검증
+    // 발급: 새로운 access token 생성 후 헤더에 반환
     fun getAccessToken(request: HttpServletRequest): String {
         // 1. 쿠키에서 refresh token 추출
         val refreshToken = jwtUtil.extractCookieToken(request, "refreshToken")
@@ -65,10 +67,10 @@ class AuthService(
         return jwtAuthService.createToken(email, role)
     }
 
-    // 검증: access, refresh token 유효성, 블랙리스트, Redis에 저장된 값 일치 여부 확인
+    // 검증: access token, refresh token 유효성 검증
     // 재발급: 새로운 access token과 refresh token 생성 후 Redis 및 쿠키/헤더 갱신 (RTR)
-    fun refreshTokens(request: HttpServletRequest, response: HttpServletResponse): Map<String, String> {
-        // 1. 쿠키에서 refresh token 추출 (쿠키 이름 "refreshToken")
+    fun refreshTokens(request: HttpServletRequest): Map<String, String> {
+        // 1. 쿠키에서 refresh token 추출
         val refreshToken = jwtUtil.extractCookieToken(request, "refreshToken")
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No refresh token provided")
 
@@ -93,11 +95,13 @@ class AuthService(
         val newAccessToken = jwtAuthService.createToken(email, role)
         val newRefreshToken = jwtAuthService.createRefreshToken(email, role)
 
-        // 7. 업데이트: Redis에 새로운 refresh token 저장 및 쿠키/헤더 갱신
+        // 7. Redis에 새로운 refresh token 저장
         redisService.storeRefreshToken(email, newRefreshToken)
-        response.setHeader("Authorization", "Bearer $newAccessToken")
-        response.addCookie(jwtUtil.createJwtCookie("refreshToken", newRefreshToken))
 
-        return mapOf("message" to "Tokens refreshed")
+        // 두 토큰을 Map에 담아서 반환
+        return mapOf(
+            "accessToken" to newAccessToken,
+            "refreshToken" to newRefreshToken
+        )
     }
 }

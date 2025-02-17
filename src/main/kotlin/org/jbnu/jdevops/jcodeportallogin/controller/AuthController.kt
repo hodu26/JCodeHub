@@ -39,13 +39,22 @@ class AuthController(
         return ResponseEntity.ok(result)
     }
 
-    @GetMapping("/token")
-    fun getAccessToken(request: HttpServletRequest): ResponseEntity<Map<String, String>> {
-        val accessToken = authService.getAccessToken(request)
-        return ResponseEntity.ok(mapOf("accessToken" to accessToken))
+    @PostMapping("/token")
+    @Operation(
+        summary = "Access Token 발급",
+        description = "클라이언트의 요청에 기반하여 서버의 세션 또는 쿠키 정보를 활용해 Access Token을 발급합니다. 발급된 토큰은 응답 헤더의 'Authorization'에 'Bearer {token}' 형식으로 포함되며, CORS 설정에 따라 클라이언트에서 접근할 수 있도록 'Access-Control-Expose-Headers' 헤더가 추가됩니다."
+    )
+    fun getAccessToken(request: HttpServletRequest, response: HttpServletResponse): ResponseEntity<Map<String, String>> {
+        return try {
+            val accessToken = authService.getAccessToken(request)
+            response.setHeader("Authorization", "Bearer $accessToken")
+            response.setHeader("Access-Control-Expose-Headers", "Authorization") // Authorization 헤더 클라이언트에 노출
+            ResponseEntity.ok(mapOf("message" to "Tokens created"))
+        } catch (ex: Exception) {
+            ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to ex.message!!))
+        }
     }
 
-    // jwt token refresh
     @PostMapping("/refresh")
     @Operation(
         summary = "JWT 토큰 리프레시",
@@ -53,8 +62,12 @@ class AuthController(
     )
     fun refreshToken(request: HttpServletRequest, response: HttpServletResponse): ResponseEntity<Map<String, String>> {
         return try {
-            val result = authService.refreshTokens(request, response)
-            ResponseEntity.ok(result)
+            val tokens = authService.refreshTokens(request)
+            response.setHeader("Authorization", "Bearer ${tokens["accessToken"]}")
+            response.setHeader("Access-Control-Expose-Headers", "Authorization") // Authorization 헤더 클라이언트에 노출
+
+            response.addCookie(jwtUtil.createJwtCookie("refreshToken", tokens["refreshToken"]!!))
+            ResponseEntity.ok(mapOf("message" to "Tokens refreshed"))
         } catch (ex: Exception) {
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to ex.message!!))
         }
