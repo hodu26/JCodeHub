@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.jbnu.jdevops.jcodeportallogin.service.RedisService
 import org.jbnu.jdevops.jcodeportallogin.service.token.JwtAuthService
+import org.jbnu.jdevops.jcodeportallogin.service.token.TokenType
 import org.jbnu.jdevops.jcodeportallogin.util.JwtUtil
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -41,7 +42,7 @@ class CustomLogoutSuccessHandler(
         // 2. Authorization 헤더에서 Access Token 추출 ("Bearer {token}")
         val accessToken = jwtUtil.extractBearerToken(request)
         if (!accessToken.isNullOrEmpty()) {
-            val jwtClaims: Claims = jwtAuthService.getClaims(accessToken)
+            val jwtClaims: Claims = jwtAuthService.getClaims(accessToken, TokenType.ACCESS)
             val ttlMillis = jwtClaims.expiration.time - System.currentTimeMillis()
             redisService.addToJwtBlacklist(accessToken, ttlMillis)
         }
@@ -52,7 +53,7 @@ class CustomLogoutSuccessHandler(
 
         if (refreshToken != null) {
             // refresh token에서 claim(만료 시간, email) 추출 및 만료까지의 시간 계산
-            val refreshClaims: Claims = jwtAuthService.getClaims(refreshToken)
+            val refreshClaims: Claims = jwtAuthService.getClaims(refreshToken, TokenType.REFRESH)
             val refreshTtlMillis = refreshClaims.expiration.time - System.currentTimeMillis()
             emailFromRefresh = refreshClaims.subject ?:
                 throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token missing subject")

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*
 import jakarta.servlet.http.HttpServletRequest
 import org.jbnu.jdevops.jcodeportallogin.dto.*
 import org.jbnu.jdevops.jcodeportallogin.service.token.JwtAuthService
+import org.jbnu.jdevops.jcodeportallogin.service.token.TokenType
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.Authentication
 import org.springframework.web.server.ResponseStatusException
@@ -119,7 +120,7 @@ class UserController(
         }
 
         val token = authHeader.substring(7)
-        return jwtAuthService.extractEmail(token)
+        return jwtAuthService.extractEmail(token, TokenType.ACCESS)
     }
 
     // JWT 토큰에서 이메일 파싱
@@ -127,6 +128,6 @@ class UserController(
         val token = request.getHeader("Authorization")?.removePrefix("Bearer ")
             ?: throw IllegalArgumentException("Missing Authorization Header")
 
-        return jwtAuthService.extractEmail(token)
+        return jwtAuthService.extractEmail(token, TokenType.ACCESS)
     }
 }

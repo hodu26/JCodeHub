@@ -46,10 +46,12 @@ class AuthController(
     )
     fun getAccessToken(request: HttpServletRequest, response: HttpServletResponse): ResponseEntity<Map<String, String>> {
         return try {
-            val accessToken = authService.getAccessToken(request)
-            response.setHeader("Authorization", "Bearer $accessToken")
+            val tokens = authService.getAccessToken(request)
+            response.setHeader("Authorization", "Bearer ${tokens["accessToken"]}")
             response.setHeader("Access-Control-Expose-Headers", "Authorization") // Authorization 헤더 클라이언트에 노출
-            ResponseEntity.ok(mapOf("message" to "Tokens created"))
+
+            response.addCookie(jwtUtil.createJwtCookie("refreshToken", tokens["refreshToken"]!!))
+            ResponseEntity.ok(mapOf("message" to "Token created"))
         } catch (ex: Exception) {
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to ex.message!!))
         }
