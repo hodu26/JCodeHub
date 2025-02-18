@@ -59,15 +59,42 @@ class UserService(
     }
 
     @Transactional(readOnly = true)
-    fun getUserInfo(email: String): UserInfoDto {
+    fun getUserInfo(email: String): UserDto {
         val user = userRepository.findByEmail(email)
             ?: throw IllegalArgumentException("User not found with email: $email")
 
-        return UserInfoDto(
+        return UserDto(
             email = user.email,
+            name = user.name,
             role = user.role,
             studentNum = user.studentNum
         )
+    }
+
+    // 내 정보 수정: 이름은 수정 가능하며, 학생번호는 아직 설정되지 않은 경우에만 수정할 수 있음
+    fun updateUserInfo(email: String, updateDto: UserProfileUpdateDto): Map<String, String> {
+        val user = userRepository.findByEmail(email)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+
+        // 이름 수정: updateDto.name이 null이 아니고, 기존 이름과 다를 경우에 user.name에 값을 할당
+        if (updateDto.name != user.name) {
+            user.name = updateDto.name
+        }
+
+        // 학생번호 수정: updateDto.studentNum이 null이 아니라면 updateStudentNum() 메서드 호출
+        var message: String = ""
+        try {
+            user.updateStudentNum(updateDto.studentNum)
+            message = "User information updated successfully"
+        } catch (e: IllegalStateException) {
+            // 이미 학생번호가 설정되어 있는 경우 로깅
+            message = "User information updated, but student number update was ignored (already set)"
+        }
+
+        // 변경된 내용 저장
+        val updatedUser = userRepository.save(user)
+
+        return mapOf("message" to message)
     }
 
     @Transactional(readOnly = true)

@@ -26,12 +26,28 @@ class UserController(
         description = "현재 인증된 사용자의 정보를 조회합니다."
     )
     @GetMapping("/me")
-    fun getUserInfo(request: HttpServletRequest, authentication: Authentication): ResponseEntity<UserInfoDto> {
+    fun getUserInfo(request: HttpServletRequest, authentication: Authentication): ResponseEntity<UserDto> {
         val email = authentication.principal as? String
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
 
         val userInfo = userService.getUserInfo(email)
         return ResponseEntity.ok(userInfo)
+    }
+
+    @Operation(
+        summary = "내 정보 수정",
+        description = "현재 인증된 사용자의 정보를 수정합니다. 이름은 수정 가능하며, 학생번호는 아직 설정되지 않은 경우에만 수정할 수 있습니다."
+    )
+    @PutMapping("/me")
+    fun updateUserInfo(
+        @RequestBody updateDto: UserProfileUpdateDto,
+        authentication: Authentication
+    ): ResponseEntity<Map<String, String>> {
+        val email = authentication.principal as? String
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
+
+        val result = userService.updateUserInfo(email, updateDto)
+        return ResponseEntity.ok(result)
     }
 
     // 유저별 강의 정보 조회

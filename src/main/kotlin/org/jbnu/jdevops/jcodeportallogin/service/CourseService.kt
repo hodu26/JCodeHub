@@ -33,6 +33,7 @@ class CourseService(
             val user = it.user
             UserInfoDto(
                 userId = user.id,
+                name = user.name,
                 email = user.email,
                 role = user.role,
                 studentNum = user.studentNum
