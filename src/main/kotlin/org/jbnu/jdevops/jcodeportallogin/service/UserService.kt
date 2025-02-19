@@ -152,6 +152,8 @@ class UserService(
                         assignmentId = assignment.id,
                         assignmentName = assignment.name,
                         assignmentDescription = assignment.description,
+                        kickoffDate = assignment.kickoffDate,
+                        deadlineDate = assignment.deadlineDate,
                         createdAt = assignment.createdAt.toString(),
                         updatedAt = assignment.updatedAt.toString()
                     )

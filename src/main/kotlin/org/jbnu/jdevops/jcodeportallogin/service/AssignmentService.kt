@@ -20,11 +20,18 @@ class AssignmentService(
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
 
-        val assignment = assignmentRepository.save(Assignment(name = assignmentDto.assignmentName, description = assignmentDto.assignmentDescription, course = course))
+        val assignment = assignmentRepository.save(Assignment(
+            name = assignmentDto.assignmentName,
+            description = assignmentDto.assignmentDescription,
+            kickoffDate = assignmentDto.kickoffDate,
+            deadlineDate = assignmentDto.deadlineDate,
+            course = course))
         return AssignmentDto(
             assignmentId = assignment.id,
             assignmentName = assignment.name,
             assignmentDescription = assignment.description,
+            kickoffDate = assignment.kickoffDate,
+            deadlineDate = assignment.deadlineDate,
             createdAt = assignment.createdAt.toString(),
             updatedAt = assignment.updatedAt.toString())
     }
@@ -50,6 +57,8 @@ class AssignmentService(
             assignmentId = assignment.id,
             assignmentName = updatedAssignment.name,
             assignmentDescription = updatedAssignment.description,
+            kickoffDate = updatedAssignment.kickoffDate,
+            deadlineDate = updatedAssignment.deadlineDate,
             createdAt = updatedAssignment.createdAt.toString(),
             updatedAt = updatedAssignment.updatedAt.toString()
         )

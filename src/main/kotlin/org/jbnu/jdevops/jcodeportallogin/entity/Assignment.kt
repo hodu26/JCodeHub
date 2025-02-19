@@ -19,6 +19,12 @@ data class Assignment(
     @Column
     val description: String?,
 
+    @Column
+    val kickoffDate: LocalDateTime,
+
+    @Column
+    val deadlineDate: LocalDateTime,
+
     @Column(nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
 

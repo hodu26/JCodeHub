@@ -54,6 +54,8 @@ class CourseService(
                 assignmentId = it.id,
                 assignmentName = it.name,
                 assignmentDescription = it.description,
+                kickoffDate = it.kickoffDate,
+                deadlineDate = it.deadlineDate,
                 createdAt = it.createdAt.toString(),
                 updatedAt = it.updatedAt.toString()
             )
