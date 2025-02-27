@@ -3,11 +3,18 @@ package org.jbnu.jdevops.jcodeportallogin.service
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
+import java.util.UUID
 
 @Service
 class RedisService(
     private val redisTemplate: StringRedisTemplate
 ) {
+    // 저장된 사용자 정보 조회
+    fun getUserProfile(id: String): MutableMap<String, String> {
+        val key = "user:profile:$id"
+        return redisTemplate.opsForHash<String, String>().entries(key)
+    }
+
     // JCode URL을 Redis에서 가져오기
     fun getJcodeUrl(courseCode: String): String? {
         return redisTemplate.opsForValue().get("course:$courseCode:jcode-url")
@@ -81,5 +88,24 @@ class RedisService(
     fun isJwtBlacklisted(jwt: String): Boolean {
         val key = "blacklist:jwt:$jwt"
         return redisTemplate.hasKey(key) ?: false
+    }
+
+    // 사용자 정보를 하나의 해시로 저장 (키: "user:profile:<UUID>")
+    fun storeUserProfile(email: String, studentNumber: String, courseCode: String, clss: String) {
+        // UUID 생성
+        val id = UUID.randomUUID().toString()
+        // 키 예시: user:profile:123e4567-e89b-12d3-a456-426614174000
+        val key = "user:profile:$id"
+        // 저장할 필드와 값을 Map으로 구성
+        val userInfo = mapOf(
+            "email" to email,
+            "studentNumber" to studentNumber,
+            "courseCode" to courseCode,
+            "clss" to clss
+        )
+        // Redis 해시에 여러 필드를 한 번에 저장
+        redisTemplate.opsForHash<String, String>().putAll(key, userInfo)
+
+        // 필요시 id를 반환하거나 로깅 등 추가 처리 가능
     }
 }

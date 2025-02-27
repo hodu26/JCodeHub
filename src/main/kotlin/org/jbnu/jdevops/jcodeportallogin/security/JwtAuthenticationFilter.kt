@@ -60,7 +60,8 @@ class JwtAuthenticationFilter(
         val matcher = AntPathMatcher()  // 와일드카드 패턴 허용 (**)
         val excludedPaths = listOf(
             "/api/auth/token", "/api/auth/refresh",         // access token 발급 엔드포인트
-            "/swagger-ui/**", "/v3/api-docs/**"  // swagger 관련 엔드포인트
+            "/swagger-ui/**", "/v3/api-docs/**",  // swagger 관련 엔드포인트
+            "/oauth2/**", "/login"
         )
 
         val shouldNotFilter = excludedPaths.any { matcher.match(it, request.requestURI) }

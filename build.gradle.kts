@@ -6,6 +6,15 @@ plugins {
     kotlin("plugin.jpa") version "1.9.24"
 }
 
+// gradle 메인 클래스 설정
+springBoot {
+    mainClass.set("org.jbnu.jdevops.jcodeportallogin.JcodeportalLoginApplication")
+}
+tasks.bootJar {
+    archiveFileName.set("app.jar")
+    mainClass.set("org.jbnu.jdevops.jcodeportallogin.JcodeportalLoginApplication")
+}
+
 group = "org.jbnu.jdevops"
 version = "v1.0-RELEASE"
 

@@ -29,7 +29,10 @@ class JCodeService(
         val userCourse = userCoursesRepository.findByUserIdAndCourseId(user.id, course.id)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "UserCourse not found")
 
-
+//        val storedJcode = jCodeRepository.findByUserIdAndCourseId(user.id, course.id)
+//        if (storedJcode != null) {
+//            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Jcode already exists")
+//        }
 
         val jCode = jCodeRepository.save(
             Jcode(

@@ -1,10 +1,7 @@
 package org.jbnu.jdevops.jcodeportallogin.service
 
 import org.jbnu.jdevops.jcodeportallogin.dto.*
-import org.jbnu.jdevops.jcodeportallogin.entity.Login
-import org.jbnu.jdevops.jcodeportallogin.entity.User
-import org.jbnu.jdevops.jcodeportallogin.entity.UserCourses
-import org.jbnu.jdevops.jcodeportallogin.entity.toDto
+import org.jbnu.jdevops.jcodeportallogin.entity.*
 import org.jbnu.jdevops.jcodeportallogin.repo.*
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -231,8 +228,16 @@ class UserService(
     }
 
     @Transactional(readOnly = true)
-    fun getAllUsers(): List<UserDto> {
-        return userRepository.findAll().map { it.toDto() }
+    fun getAllUsers(): List<UserInfoDto> {
+        return userRepository.findAll().map { user ->
+            UserInfoDto(
+                userId = user.id,
+                name = user.name,
+                email = user.email,
+                role = user.role,
+                studentNum = user.studentNum,
+            )
+        }
     }
 
     @Transactional(readOnly = true)

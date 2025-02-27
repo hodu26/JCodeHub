@@ -44,11 +44,11 @@ class RedirectController(private val jwtUtil: JwtUtil) {
         println(encodedCourseCode)
 
         // Node.js 서버 URL에 인코딩된 파라미터를 포함하여 구성
-        val finalNodeJsUrl = "$nodeJsUrl?courseCode=$encodedCourseCode&clss=$clss&st=$encodedSt"
+        val finalNodeJsUrl = "$nodeJsUrl?courseCode=$encodedCourseCode&clss=$clss&st=$encodedSt&folder=/home/coder/project"
         println(finalNodeJsUrl)
 
         // Keycloak Access Token을 HTTP-Only Secure 쿠키로 설정
-        response.addCookie(jwtUtil.createJwtCookie("jwt", token))
+        response.addCookie(jwtUtil.createJwtCookie("accessToken", token))
 
         // 클라이언트를 Node.js 서버로 리다이렉트
         response.sendRedirect(finalNodeJsUrl)

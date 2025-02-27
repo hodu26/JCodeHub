@@ -38,7 +38,10 @@ out/
 
 ### Kotlin ###
 .kotlin
-/src/main/resources/application.properties
+/src/main/resources/*.properties
 
 ### Dev ###
 .gitmessage.txt
+
+### CICD ###
+jcode-backend.tar*

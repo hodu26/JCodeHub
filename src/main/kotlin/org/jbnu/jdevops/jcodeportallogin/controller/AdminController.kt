@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.jbnu.jdevops.jcodeportallogin.dto.RegisterUserDto
 import org.jbnu.jdevops.jcodeportallogin.dto.UserDto
+import org.jbnu.jdevops.jcodeportallogin.dto.UserInfoDto
 import org.jbnu.jdevops.jcodeportallogin.entity.RoleType
 import org.jbnu.jdevops.jcodeportallogin.service.UserService
 import org.springframework.http.ResponseEntity
@@ -22,7 +23,7 @@ class AdminController(private val userService: UserService) {
         description = "모든 사용자 정보를 조회합니다."
     )
     @GetMapping
-    fun getAllUsers(): List<UserDto> {
+    fun getAllUsers(): List<UserInfoDto> {
         return userService.getAllUsers()
     }
 
