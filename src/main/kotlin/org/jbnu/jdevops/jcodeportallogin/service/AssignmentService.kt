@@ -48,7 +48,8 @@ class AssignmentService(
         val updatedAssignment = assignment.copy(
             name = assignmentDto.assignmentName,
             description = assignmentDto.assignmentDescription,
-            updatedAt = LocalDateTime.now()
+            kickoffDate = assignmentDto.kickoffDate,
+            deadlineDate = assignmentDto.deadlineDate
         )
 
         assignmentRepository.save(updatedAssignment)
