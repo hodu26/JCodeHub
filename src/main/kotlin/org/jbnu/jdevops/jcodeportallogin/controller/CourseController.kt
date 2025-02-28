@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.jbnu.jdevops.jcodeportallogin.dto.AssignmentDto
 import org.jbnu.jdevops.jcodeportallogin.dto.CourseDto
 import org.jbnu.jdevops.jcodeportallogin.dto.UserInfoDto
+import org.jbnu.jdevops.jcodeportallogin.dto.UserCourseDetailsDto
 import org.jbnu.jdevops.jcodeportallogin.service.CourseService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -79,5 +80,16 @@ class CourseController(
     fun deleteCourse(@PathVariable courseId: Long): ResponseEntity<String> {
         courseService.deleteCourse(courseId)
         return ResponseEntity.ok("Course deleted successfully")
+    }
+
+    // 관리자용 강의 상세 정보 조회
+    @Operation(
+        summary = "관리자용 강의 상세 정보 조회",
+        description = "관리자가 특정 강의의 상세 정보를 조회합니다. (ADMIN 전용)"
+    )
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{courseId}/admin/details")
+    fun getCourseDetailsForAdmin(@PathVariable courseId: Long): ResponseEntity<UserCourseDetailsDto> {
+        return ResponseEntity.ok(courseService.getCourseDetailsForAdmin(courseId))
     }
 }
