@@ -16,6 +16,17 @@ import org.springframework.web.bind.annotation.*
 class CourseController(
     private val courseService: CourseService
 ) {
+    // 전체 강의 목록 조회
+    @Operation(
+        summary = "전체 강의 목록 조회",
+        description = "시스템에 등록된 모든 강의 목록을 조회합니다. (ADMIN 전용)"
+    )
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    fun getAllCourses(): ResponseEntity<List<CourseDto>> {
+        return ResponseEntity.ok(courseService.getAllCourses())
+    }
+
     // 강의별 유저 조회
     @Operation(
         summary = "강의별 유저 조회",

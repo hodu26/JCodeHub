@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class CourseService(
@@ -129,5 +130,21 @@ class CourseService(
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found")
         }
         courseRepository.deleteById(courseId)
+    }
+
+    @Transactional(readOnly = true)
+    fun getAllCourses(): List<CourseDto> {
+        return courseRepository.findAll()
+            .map { course ->
+                CourseDto(
+                    courseId = course.id,
+                    name = course.name,
+                    code = course.code,
+                    professor = course.professor,
+                    term = course.term,
+                    year = course.year,
+                    clss = course.clss
+                )
+            }
     }
 }
