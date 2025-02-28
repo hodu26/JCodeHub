@@ -111,7 +111,7 @@ class CourseService(
     fun updateCourse(courseId: Long, courseDto: CourseDto): CourseDto {
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
-        val updatedCourse = course.copy(name = courseDto.name, code = courseDto.code)
+        val updatedCourse = course.copy(name = courseDto.name, code = courseDto.code, clss = courseDto.clss, year = courseDto.year, term = courseDto.term, professor = courseDto.professor)
         courseRepository.save(updatedCourse)
         return CourseDto(
             courseId = updatedCourse.id,
