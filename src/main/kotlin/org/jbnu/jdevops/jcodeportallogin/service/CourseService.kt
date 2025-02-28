@@ -2,6 +2,7 @@ package org.jbnu.jdevops.jcodeportallogin.service
 
 import org.jbnu.jdevops.jcodeportallogin.dto.AssignmentDto
 import org.jbnu.jdevops.jcodeportallogin.dto.CourseDto
+import org.jbnu.jdevops.jcodeportallogin.dto.UserCourseDetailsDto
 import org.jbnu.jdevops.jcodeportallogin.dto.UserInfoDto
 import org.jbnu.jdevops.jcodeportallogin.entity.Course
 import org.jbnu.jdevops.jcodeportallogin.repo.AssignmentRepository
@@ -24,10 +25,11 @@ class CourseService(
 ) {
     // 강의별 유저 조회
     fun getUsersByCourse(courseId: Long): List<UserInfoDto> {
+        // 강의가 존재하는지 먼저 확인
         val userCourses = userCoursesRepository.findByCourseId(courseId)
 
         if (userCourses.isEmpty()) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "No users found for this course")
+            return emptyList()
         }
 
         return userCourses.map {
@@ -146,5 +148,36 @@ class CourseService(
                     clss = course.clss
                 )
             }
+    }
+
+    // 관리자용 강의 상세 정보 조회
+    fun getCourseDetailsForAdmin(courseId: Long): UserCourseDetailsDto {
+        val course = courseRepository.findById(courseId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
+            
+        val assignments = assignmentRepository.findByCourseId(courseId)
+            .map { assignment ->
+                AssignmentDto(
+                    assignmentId = assignment.id,
+                    assignmentName = assignment.name,
+                    assignmentDescription = assignment.description,
+                    kickoffDate = assignment.kickoffDate,
+                    deadlineDate = assignment.deadlineDate,
+                    createdAt = assignment.createdAt.toString(),
+                    updatedAt = assignment.updatedAt.toString()
+                )
+            }
+            
+        return UserCourseDetailsDto(
+            courseId = course.id,
+            courseName = course.name,
+            courseCode = course.code,
+            courseProfessor = course.professor,
+            courseYear = course.year,
+            courseTerm = course.term,
+            courseClss = course.clss,
+            assignments = assignments,
+            jcodeUrl = null // 관리자는 JCode URL이 필요 없음
+        )
     }
 }
