@@ -46,7 +46,7 @@ class AuthService(
     // 발급: 새로운 access token 생성 후 헤더에 반환 (RTR)
     fun getAccessToken(request: HttpServletRequest): Map<String, String> {
         // 1. 쿠키에서 refresh token 추출
-        val refreshToken = jwtUtil.extractCookieToken(request, "refreshToken")
+        val refreshToken = jwtUtil.extractCookieToken(request, "jcodeRt")
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No refresh token provided")
 
         // 2. refresh token의 클레임에서 사용자 이메일 추출
@@ -82,7 +82,7 @@ class AuthService(
     // 재발급: 새로운 access token과 refresh token 생성 후 Redis 및 쿠키/헤더 갱신 (RTR)
     fun refreshTokens(request: HttpServletRequest): Map<String, String> {
         // 1. 쿠키에서 refresh token 추출
-        val refreshToken = jwtUtil.extractCookieToken(request, "refreshToken")
+        val refreshToken = jwtUtil.extractCookieToken(request, "jcodeRt")
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No refresh token provided")
 
         // 2. refresh token의 클레임에서 사용자 정보 추출

@@ -50,7 +50,7 @@ class AuthController(
             response.setHeader("Authorization", "Bearer ${tokens["accessToken"]}")
             response.setHeader("Access-Control-Expose-Headers", "Authorization") // Authorization 헤더 클라이언트에 노출
 
-            response.addCookie(jwtUtil.createJwtCookie("refreshToken", tokens["refreshToken"]!!))
+            response.addCookie(jwtUtil.createJwtCookie("jcodeRt", tokens["refreshToken"]!!))
             ResponseEntity.ok(mapOf("message" to "Token created"))
         } catch (ex: Exception) {
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to ex.message!!))
@@ -68,7 +68,7 @@ class AuthController(
             response.setHeader("Authorization", "Bearer ${tokens["accessToken"]}")
             response.setHeader("Access-Control-Expose-Headers", "Authorization") // Authorization 헤더 클라이언트에 노출
 
-            response.addCookie(jwtUtil.createJwtCookie("refreshToken", tokens["refreshToken"]!!))
+            response.addCookie(jwtUtil.createJwtCookie("jcodeRt", tokens["refreshToken"]!!))
             ResponseEntity.ok(mapOf("message" to "Tokens refreshed"))
         } catch (ex: Exception) {
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to ex.message!!))

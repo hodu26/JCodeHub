@@ -1,6 +1,7 @@
 package org.jbnu.jdevops.jcodeportallogin.security
 
 import io.jsonwebtoken.Claims
+import io.jsonwebtoken.ExpiredJwtException
 import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -47,21 +48,26 @@ class CustomLogoutSuccessHandler(
             redisService.addToJwtBlacklist(accessToken, ttlMillis)
         }
 
-        // 3. refresh token 쿠키 추출 (쿠키 이름 "refreshToken")
-        val refreshToken = jwtUtil.extractCookieToken(request, "refreshToken")
+        // 3. refresh token 쿠키 추출 (쿠키 이름 "jcodeRt")
+        val refreshToken = jwtUtil.extractCookieToken(request, "jcodeRt")
         var emailFromRefresh: String? = null
 
         if (refreshToken != null) {
-            // refresh token에서 claim(만료 시간, email) 추출 및 만료까지의 시간 계산
-            val refreshClaims: Claims = jwtAuthService.getClaims(refreshToken, TokenType.REFRESH)
-            val refreshTtlMillis = refreshClaims.expiration.time - System.currentTimeMillis()
+            // refresh token에서 claim(만료 시간, email) 추출 및 만료까지의 시간 계산 (만료시 0)
+            val refreshClaims: Claims = try {
+                jwtAuthService.getClaims(refreshToken, TokenType.REFRESH)
+            } catch (e: ExpiredJwtException) {
+                e.claims // 만료된 경우라도 서명 검증은 완료되었으므로 claims를 추출
+            }
+            val refreshTtlMillis = maxOf(refreshClaims.expiration.time - System.currentTimeMillis(), 0L)
+
             emailFromRefresh = refreshClaims.subject ?:
                 throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token missing subject")
 
             // refresh token 블랙리스트 저장 및 redis와 쿠키에서 폐기
             redisService.addToJwtBlacklist(refreshToken, refreshTtlMillis)
             redisService.deleteRefreshToken(emailFromRefresh)
-            response.addCookie(jwtUtil.createExpiredCookie("refreshToken"))
+            response.addCookie(jwtUtil.createExpiredCookie("jcodeRt"))
         } else {
             // refresh token 쿠키가 없으면 로그를 남기고 계속 진행
             println("Refresh token cookie not found; proceeding with logout")
@@ -84,7 +90,7 @@ class CustomLogoutSuccessHandler(
         val keycloakLogoutRedirectUrl = if (!idToken.isNullOrEmpty()) {
             "$keycloakLogoutUrl?id_token_hint=$idToken&post_logout_redirect_uri=$redirectUri"
         } else {
-            "$keycloakLogoutUrl?post_logout_redirect_uri=$redirectUri"
+            "$keycloakLogoutUrl?logout_redirect_uri=$redirectUri"
         }
 
         // 7. Keycloak 로그아웃 엔드포인트로 리다이렉트

@@ -81,7 +81,7 @@ class CustomAuthenticationSuccessHandler(
         val myRefreshToken = jwtAuthService.createToken(email, role, TokenType.REFRESH)
         redisService.storeRefreshToken(email, myRefreshToken)
         // refresh token을 HttpOnly 쿠키로 전달
-        response.addCookie(jwtUtil.createJwtCookie("refreshToken", myRefreshToken))
+        response.addCookie(jwtUtil.createJwtCookie("jcodeRt", myRefreshToken))
 
         // 6. 자체 JWT 토큰(Access token) 발급 및 전달은 /api/auth/token로 수행
 
