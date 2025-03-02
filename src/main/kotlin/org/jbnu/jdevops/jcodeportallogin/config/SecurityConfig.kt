@@ -66,7 +66,7 @@ class SecurityConfig {
                     .logoutSuccessUrl("/")
                     .logoutSuccessHandler(customLogoutSuccessHandler)
                     .invalidateHttpSession(true)
-                    .deleteCookies("JSESSIONID")
+                    .deleteCookies("SESSION")
             }
             .sessionManagement { sessionManagement ->
                 sessionManagement.sessionFixation { it.migrateSession() }  // 세션 고정 보호

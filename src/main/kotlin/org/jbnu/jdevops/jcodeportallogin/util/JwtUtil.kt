@@ -16,7 +16,7 @@ class JwtUtil (
             secure = true      // HTTPS에서만 전송
             path = "/"         // 전체 도메인에서 사용 가능
             maxAge = 3600      // 1시간 동안 유효
-            setAttribute("SameSite", "None")  // 리다이렉션 시 쿠키 유지
+            setAttribute("SameSite", "Lax")  // 리다이렉션 시 쿠키 유지
             domain = cookieDomain // 쿠키를 모든 하위 도메인에서 사용 가능하도록 설정
         }
     }
@@ -27,7 +27,7 @@ class JwtUtil (
             secure = true
             path = "/"
             maxAge = 0
-            setAttribute("SameSite", "None")
+            setAttribute("SameSite", "Lax")
             domain = cookieDomain
         }
     }
