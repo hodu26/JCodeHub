@@ -91,7 +91,7 @@ class RedisService(
     }
 
     // 사용자 정보를 하나의 해시로 저장 (키: "user:profile:<UUID>")
-    fun storeUserProfile(email: String, studentNumber: String, courseCode: String, clss: String) {
+    fun storeUserProfile(email: String, studentNumber: String, courseCode: String, clss: String): String {
         // UUID 생성
         val id = UUID.randomUUID().toString()
         // 키 예시: user:profile:123e4567-e89b-12d3-a456-426614174000
@@ -105,7 +105,6 @@ class RedisService(
         )
         // Redis 해시에 여러 필드를 한 번에 저장
         redisTemplate.opsForHash<String, String>().putAll(key, userInfo)
-
-        // 필요시 id를 반환하거나 로깅 등 추가 처리 가능
+        return id
     }
 }

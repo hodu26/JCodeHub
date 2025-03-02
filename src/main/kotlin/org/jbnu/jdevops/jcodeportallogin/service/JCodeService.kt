@@ -29,10 +29,10 @@ class JCodeService(
         val userCourse = userCoursesRepository.findByUserIdAndCourseId(user.id, course.id)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "UserCourse not found")
 
-//        val storedJcode = jCodeRepository.findByUserIdAndCourseId(user.id, course.id)
-//        if (storedJcode != null) {
-//            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Jcode already exists")
-//        }
+        val storedJcode = jCodeRepository.findByUserIdAndCourseId(user.id, course.id)
+        if (storedJcode != null) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Jcode already exists")
+        }
 
         val jCode = jCodeRepository.save(
             Jcode(
@@ -46,12 +46,6 @@ class JCodeService(
         // UserCourses 테이블의 jcode 값을 true로 변경 (JCode 생성 시)
         val updatedUserCourse = userCourse.copy(jcode = true)
         userCoursesRepository.save(updatedUserCourse)
-
-        // DB 저장 후 Redis 동기화
-        val storedJcode = jCodeRepository.findByUserIdAndCourseId(user.id, course.id)
-        if (storedJcode != null) {
-            redisService.storeUserCourse(user.email, course.code, course.clss, jcodeUrl)
-        }
 
         return JCodeDto(
             jcodeId = jCode.id,
