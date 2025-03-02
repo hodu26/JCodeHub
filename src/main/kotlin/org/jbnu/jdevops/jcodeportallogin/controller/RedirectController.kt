@@ -53,7 +53,7 @@ class RedirectController(
         val token = request.getHeader("Authorization")?.removePrefix("Bearer ")
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing Authorization Token")
 
-        val user = userRepository.findById(redirectRequest.userId)
+        val user = userRepository.findByEmail(redirectRequest.userEmail)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
 
         val course = courseRepository.findById(redirectRequest.courseId)
