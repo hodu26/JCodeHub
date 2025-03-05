@@ -30,3 +30,6 @@ Thumbs.db
 # 로컬 아웃풋 폴더 (필요에 따라)
 out/
 jcode-backend.tar*
+
+# 프로젝트 sub 파일 제외
+src/main/kotlin/org/jbnu/jdevops/jcodeportallogin/util/secret/**
