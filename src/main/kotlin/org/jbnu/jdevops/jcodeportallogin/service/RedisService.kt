@@ -9,10 +9,20 @@ import java.util.UUID
 class RedisService(
     private val redisTemplate: StringRedisTemplate
 ) {
-    // 저장된 사용자 정보 조회
-    fun getUserProfile(id: String): MutableMap<String, String> {
-        val key = "user:profile:$id"
-        return redisTemplate.opsForHash<String, String>().entries(key)
+    // 프로필 조회하는 메서드 (접근 시마다 TTL 다시 세팅)
+    fun getUserProfile(uuid: String): MutableMap<String, String>? {
+        val key = "user:profile:$uuid"
+        val ops = redisTemplate.opsForHash<String, String>()
+
+        // 해시 전체 필드 조회
+        val result = ops.entries(key)
+
+        // result가 비어있지 않다면 => 키가 존재하므로 TTL 갱신
+        if (result.isNotEmpty()) {
+            redisTemplate.expire(key, 6, TimeUnit.HOURS)
+        }
+
+        return if (result.isEmpty()) null else result
     }
 
     // JCode URL을 Redis에서 가져오기
@@ -105,6 +115,10 @@ class RedisService(
         )
         // Redis 해시에 여러 필드를 한 번에 저장
         redisTemplate.opsForHash<String, String>().putAll(key, userInfo)
+
+        // TTL 6시간 설정
+        redisTemplate.expire(key, 6, TimeUnit.HOURS)
+
         return id
     }
 }
