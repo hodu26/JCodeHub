@@ -7,11 +7,8 @@ import jakarta.servlet.http.HttpServletResponse
 import org.jbnu.jdevops.jcodeportallogin.dto.RedirectDto
 import org.jbnu.jdevops.jcodeportallogin.repo.CourseRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.JCodeRepository
-import org.jbnu.jdevops.jcodeportallogin.repo.UserCoursesRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.UserRepository
 import org.jbnu.jdevops.jcodeportallogin.service.RedisService
-import org.jbnu.jdevops.jcodeportallogin.service.UserService
-import org.jbnu.jdevops.jcodeportallogin.service.token.JwtAuthService
 import org.jbnu.jdevops.jcodeportallogin.util.JwtUtil
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -27,16 +24,13 @@ import java.nio.charset.StandardCharsets
 class RedirectController(
     private val jwtUtil: JwtUtil,
     private val redisService: RedisService,
-    private val jwtAuthService: JwtAuthService,
     private val jCodeRepository: JCodeRepository,
-    private val userService: UserService,
-    private val userCoursesRepository: UserCoursesRepository,
     private val userRepository: UserRepository,
     private val courseRepository: CourseRepository
 ) {
 
-    @Value("\${nodejs.url}")  // 환경 변수에서 Node.js URL 가져오기
-    private lateinit var nodeJsUrl: String
+    @Value("\${router.url}")  // 환경 변수에서 Node.js URL 가져오기
+    private lateinit var routerUrl: String
 
     // Node.js 서버로 리다이렉션 (JCode)
     @Operation(
@@ -68,7 +62,7 @@ class RedirectController(
         if (storedJcode != null) redisService.storeUserCourse(user.email, course.code, course.clss, storedJcode.jcodeUrl)
 
         // Node.js 서버 URL에 인코딩된 UUID 파라미터만 포함하여 구성
-        val finalNodeJsUrl = "$nodeJsUrl?id=$encodedUUID&folder=/home/coder/project"
+        val finalNodeJsUrl = "$routerUrl?id=$encodedUUID&folder=/home/coder/project"
         println("Redirect URL: $finalNodeJsUrl")
 
         // Keycloak Access Token을 HTTP-Only Secure 쿠키로 설정

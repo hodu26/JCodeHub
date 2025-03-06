@@ -11,7 +11,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository
 import org.springframework.web.cors.CorsConfiguration
 
 @Configuration
@@ -19,8 +18,8 @@ class SecurityConfig {
     @Value("\${front.domain}")
     private lateinit var frontDomain: String
 
-    @Value("\${nodejs.domain}")
-    private lateinit var nodejsDomain: String
+    @Value("\${router.domain}")
+    private lateinit var routerDomain: String
 
     @Bean
     fun securityFilterChain(http: HttpSecurity,
@@ -36,7 +35,7 @@ class SecurityConfig {
             .cors { cors ->
                 cors.configurationSource {
                     val configuration = CorsConfiguration()
-                    configuration.allowedOrigins = listOf(frontDomain, nodejsDomain)
+                    configuration.allowedOrigins = listOf(frontDomain, routerDomain)
                     configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
                     configuration.allowedHeaders = listOf("*")
                     configuration.exposedHeaders = listOf("Authorization", "Set-Cookie")
