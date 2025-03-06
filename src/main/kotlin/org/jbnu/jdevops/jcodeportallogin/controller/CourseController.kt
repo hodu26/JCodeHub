@@ -7,9 +7,12 @@ import org.jbnu.jdevops.jcodeportallogin.dto.CourseDto
 import org.jbnu.jdevops.jcodeportallogin.dto.UserInfoDto
 import org.jbnu.jdevops.jcodeportallogin.dto.UserCourseDetailsDto
 import org.jbnu.jdevops.jcodeportallogin.service.CourseService
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 
 @Tag(name = "Course API", description = "강의 관련 API")
 @RestController
@@ -17,7 +20,7 @@ import org.springframework.web.bind.annotation.*
 class CourseController(
     private val courseService: CourseService
 ) {
-    // 전체 강의 목록 조회
+    // 전체 강의 목록 조회 (ADMIN 전용)
     @Operation(
         summary = "전체 강의 목록 조회",
         description = "시스템에 등록된 모든 강의 목록을 조회합니다. (ADMIN 전용)"
@@ -28,14 +31,18 @@ class CourseController(
         return ResponseEntity.ok(courseService.getAllCourses())
     }
 
-    // 강의별 유저 조회
+    // 강의별 유저 조회 (학생 조회 불가)
     @Operation(
         summary = "강의별 유저 조회",
-        description = "특정 강의에 등록된 모든 사용자 정보를 조회합니다."
+        description = "특정 강의에 등록된 모든 사용자 정보를 조회합니다. (STUDENT 제외)"
     )
+    @PreAuthorize("hasAnyRole('ADMIN','PROFESSOR','ASSISTANT')")
     @GetMapping("/{courseId}/users")
-    fun getUsersByCourse(@PathVariable courseId: Long): ResponseEntity<List<UserInfoDto>> {
-        return ResponseEntity.ok(courseService.getUsersByCourse(courseId))
+    fun getUsersByCourse(@PathVariable courseId: Long, authentication: Authentication): ResponseEntity<List<UserInfoDto>> {
+        val email = authentication.principal as? String
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
+
+        return ResponseEntity.ok(courseService.getUsersByCourse(email, courseId))
     }
 
     // 강의별 과제 조회
@@ -82,7 +89,7 @@ class CourseController(
         return ResponseEntity.ok("Course deleted successfully")
     }
 
-    // 관리자용 강의 상세 정보 조회
+    // 관리자용 강의 상세 정보 조회 (ADMIN 전용)
     @Operation(
         summary = "관리자용 강의 상세 정보 조회",
         description = "관리자가 특정 강의의 상세 정보를 조회합니다. (ADMIN 전용)"

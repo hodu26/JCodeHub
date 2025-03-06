@@ -5,9 +5,11 @@ import org.jbnu.jdevops.jcodeportallogin.dto.CourseDto
 import org.jbnu.jdevops.jcodeportallogin.dto.UserCourseDetailsDto
 import org.jbnu.jdevops.jcodeportallogin.dto.UserInfoDto
 import org.jbnu.jdevops.jcodeportallogin.entity.Course
+import org.jbnu.jdevops.jcodeportallogin.entity.RoleType
 import org.jbnu.jdevops.jcodeportallogin.repo.AssignmentRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.CourseRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.UserCoursesRepository
+import org.jbnu.jdevops.jcodeportallogin.repo.UserRepository
 import org.jbnu.jdevops.jcodeportallogin.util.CourseKeyUtil
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -21,10 +23,11 @@ class CourseService(
     private val assignmentRepository: AssignmentRepository,
     private val courseRepository: CourseRepository,
     private val courseKeyUtil: CourseKeyUtil,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val userRepository: UserRepository
 ) {
     // 강의별 유저 조회
-    fun getUsersByCourse(courseId: Long): List<UserInfoDto> {
+    fun getUsersByCourse(email: String, courseId: Long): List<UserInfoDto> {
         // 강의가 존재하는지 먼저 확인
         val userCourses = userCoursesRepository.findByCourseId(courseId)
 
@@ -32,7 +35,17 @@ class CourseService(
             return emptyList()
         }
 
-        return userCourses.map {
+        val currentUser = userRepository.findByEmail(email)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Current user not found")
+
+        // 만약 현재 사용자가 ASSISTANT라면 ASSISTANT 역할인 강의만 필터링
+        val filteredUserCourses = if (currentUser.role == RoleType.ASSISTANT) {
+            userCourses.filter { it.role == RoleType.ASSISTANT }
+        } else {
+            userCourses
+        }
+
+        return filteredUserCourses.map {
             val user = it.user
             UserInfoDto(
                 userId = user.id,
