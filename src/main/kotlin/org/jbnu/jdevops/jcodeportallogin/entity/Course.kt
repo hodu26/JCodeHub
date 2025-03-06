@@ -12,7 +12,7 @@ data class Course(
     @Column(nullable = false)
     val name: String,
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     val code: String,
 
     @Column(nullable = false) // 강의 개설 년도
