@@ -1,5 +1,6 @@
 package org.jbnu.jdevops.jcodeportallogin.repo
 
+import org.jbnu.jdevops.jcodeportallogin.entity.RoleType
 import org.jbnu.jdevops.jcodeportallogin.entity.UserCourses
 import org.springframework.data.jpa.repository.JpaRepository
 
@@ -9,4 +10,5 @@ interface UserCoursesRepository : JpaRepository<UserCourses, Int> {
     fun findByUserIdAndCourseId(userId: Long, courseId: Long): UserCourses?
     fun existsByUserIdAndCourseId(userId: Long, courseId: Long): Boolean
     fun findByUserIdAndCourseCode(userId: Long, courseCode: String): UserCourses?
+    fun findByUserEmailAndRole(email: String, role: RoleType): List<UserCourses>
 }

@@ -42,15 +42,21 @@ class RedisService(
         redisTemplate.delete(key)
     }
 
-    // 강의 참여자 목록에 유저 추가
-    fun addUserToCourseList(courseCode: String, courseClss: Int, email: String) {
-        val key = "course:$courseCode:$courseClss:participants"
+    // 강의 관리자 목록에 특정 사용자가 있는지 확인
+    fun isUserInCourseManagers(courseCode: String, courseClss: Int, email: String): Boolean {
+        val key = "course:$courseCode:$courseClss:managers"
+        return redisTemplate.opsForSet().isMember(key, email) ?: false
+    }
+
+    // 강의 관리자 목록에 유저 추가
+    fun addUserToCourseManagerList(courseCode: String, courseClss: Int, email: String) {
+        val key = "course:$courseCode:$courseClss:managers"
         redisTemplate.opsForSet().add(key, email)
     }
 
-    // 강의코드별 참여자 목록에서 특정 유저 제거
-    fun removeUserFromCourseList(courseCode: String, courseClss: Int, email: String) {
-        val key = "course:$courseCode:$courseClss:participants"
+    // 강의 관리자 목록에서 특정 유저 제거
+    fun removeUserFromCourseManagerList(courseCode: String, courseClss: Int, email: String) {
+        val key = "course:$courseCode:$courseClss:managers"
         redisTemplate.opsForSet().remove(key, email)
     }
 

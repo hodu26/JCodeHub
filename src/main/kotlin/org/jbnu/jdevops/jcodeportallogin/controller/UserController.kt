@@ -10,6 +10,7 @@ import org.jbnu.jdevops.jcodeportallogin.dto.*
 import org.jbnu.jdevops.jcodeportallogin.service.token.JwtAuthService
 import org.jbnu.jdevops.jcodeportallogin.service.token.TokenType
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
 import org.springframework.web.server.ResponseStatusException
 
@@ -61,6 +62,21 @@ class UserController(
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
 
         val courses = userService.getUserCourses(email)
+        return ResponseEntity.ok(courses)
+    }
+
+    // 조교 전용 강의 정보 조회
+    @Operation(
+        summary = "내 조교 권한 강의 정보 조회",
+        description = "현재 인증된 사용자가 조교로서 참가 중인 강의 목록을 조회합니다. (ASSISTANT 전용)"
+    )
+    @PreAuthorize("hasRole('ASSISTANT')")
+    @GetMapping("/me/assistant/courses")
+    fun getUserAssistantCourses(request: HttpServletRequest, authentication: Authentication): ResponseEntity<List<UserCoursesDto>> {
+        val email = authentication.principal as? String
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
+
+        val courses = userService.getUserAssistantCourses(email)
         return ResponseEntity.ok(courses)
     }
 

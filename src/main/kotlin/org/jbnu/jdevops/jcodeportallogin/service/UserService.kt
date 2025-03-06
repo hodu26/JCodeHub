@@ -94,6 +94,7 @@ class UserService(
         return mapOf("message" to message)
     }
 
+    // 유저별 강의 정보 조회
     @Transactional(readOnly = true)
     fun getUserCourses(email: String): List<UserCoursesDto> {
         val user = userRepository.findByEmail(email)
@@ -101,6 +102,28 @@ class UserService(
 
         val userCourses = user.courses
         return userCourses.map {
+            UserCoursesDto(
+                courseId = it.course.id,
+                courseName = it.course.name,
+                courseCode = it.course.code,
+                courseProfessor = it.course.professor,
+                courseClss = it.course.clss,
+                courseTerm = it.course.term,
+                courseYear = it.course.year
+            )
+        }
+    }
+
+    // 조교 전용 강의 정보 조회
+    @Transactional(readOnly = true)
+    fun getUserAssistantCourses(email: String): List<UserCoursesDto> {
+        val user = userRepository.findByEmail(email)
+            ?: throw IllegalArgumentException("User not found with email: $email")
+
+        // Repository를 사용해서 직접 ASSISTANT 역할인 강의만 조회
+        val assistantCourses = userCoursesRepository.findByUserEmailAndRole(email, RoleType.ASSISTANT)
+
+        return assistantCourses.map {
             UserCoursesDto(
                 courseId = it.course.id,
                 courseName = it.course.name,
@@ -189,18 +212,26 @@ class UserService(
             throw ResponseStatusException(HttpStatus.CONFLICT, "User already enrolled in this course")
         }
 
+        // 조교는 가입 시 기본적으로 STUDENT로 가입  ->  추후에 관리자/교수가 권한 승격 시켜줌
+        var role: RoleType? = null
+        if (user.role == RoleType.ASSISTANT) role = RoleType.STUDENT
+        else role = user.role
+
         // UserCourses 엔티티 저장
         val userCourse = UserCourses(
             user = user,
             course = course,
-            jcode = false // 기본적으로 JCode 사용 여부 false
+            role = role
         )
         userCoursesRepository.save(userCourse)
-
-        // DB 저장 후 Redis 데이터 동기화: 강의 코드와 강의 분반(clss)을 함께 사용
-        val storedUserCourse = userCoursesRepository.findByUserIdAndCourseCode(user.id, course.code)
-        if (storedUserCourse != null) {
-            redisService.addUserToCourseList(course.code, course.clss, email)
+        
+        // 교수는 강의 관리자에 추가
+        if (role == RoleType.PROFESSOR) {
+            // DB 저장 후 Redis 데이터 동기화: 강의 코드와 강의 분반(clss)을 함께 사용
+            val storedUserCourse = userCoursesRepository.findByUserIdAndCourseCode(user.id, course.code)
+            if (storedUserCourse != null) {
+                redisService.addUserToCourseManagerList(course.code, course.clss, email)
+            }   
         }
     }
 
@@ -224,8 +255,11 @@ class UserService(
         userCoursesRepository.delete(userCourse)
 
         // Redis에서 해당 강의의 참여자 목록에서 해당 유저(email) 제거
-        redisService.removeUserFromCourseList(course.code, course.clss, email)
+        redisService.removeUserFromCourseManagerList(course.code, course.clss, email)
     }
+
+
+    ///////////////////   관리자용   //////////////////////////
 
     @Transactional(readOnly = true)
     fun getAllUsers(): List<UserInfoDto> {
@@ -245,6 +279,76 @@ class UserService(
         val user = userRepository.findById(userId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with id: $userId")
         return user.toDto()
+    }
+
+    @Transactional
+    fun updateUserRole(email: String, userId: Long, newRole: RoleType, courseId: Long?) {
+        val currentUser = userRepository.findByEmail(email)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Current user not found")
+
+        // 대상 유저 조회
+        val targetUser = userRepository.findById(userId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with id: $userId")
+
+        when (currentUser.role) {
+            RoleType.ADMIN -> {}  // ADMIN은 모든 권한 설정 가능
+            RoleType.PROFESSOR -> {
+                if (courseId == null) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "권한을 변경할 강의가 지정되지 않았습니다.")
+                val course = courseRepository.findById(courseId)
+                    .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
+                // 현재 교수 사용자가 Redis에 해당 강의 관리자로 등록되어 있는지 확인
+                if (!redisService.isUserInCourseManagers(course.code, course.clss, currentUser.email)) {
+                    throw ResponseStatusException(HttpStatus.FORBIDDEN, "현재 교수로 등록되어 있지 않아 권한이 없습니다.")
+                }
+                // 대상 유저의 기존 role과 변경할 새 role은 STUDENT 또는 ASSISTANT여야 함
+                if (newRole !in listOf(RoleType.STUDENT, RoleType.ASSISTANT) || targetUser.role !in listOf(RoleType.STUDENT, RoleType.ASSISTANT)) {
+                    throw ResponseStatusException(HttpStatus.FORBIDDEN, "PROFESSOR는 STUDENT 또는 ASSISTANT의 권한만 변경할 수 있습니다.")
+                }
+            }
+            else -> {
+                throw ResponseStatusException(HttpStatus.FORBIDDEN, "해당 권한으로는 유저 권한 변경이 불가능합니다.")
+            }
+        }
+
+        // courseId가 전달되었을 경우, 해당 강의에 대해서만 Redis 업데이트 수행
+        if (courseId != null) {
+            val userCourse = userCoursesRepository.findByUserIdAndCourseId(targetUser.id, courseId)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User is not enrolled in this course")
+
+            val course = userCourse.course
+            // 새 역할이 ASSISTANT, PROFESSOR로 설정되었을 때는 강의의 관리자로 등록 (redis)
+            if (newRole == RoleType.ASSISTANT || newRole == RoleType.PROFESSOR) {
+                redisService.addUserToCourseManagerList(course.code, course.clss, targetUser.email)
+
+                // 새 역할이 ASSISTANT인 경우, user_courses 엔티티의 role도 ASSISTANT로 업데이트
+                if (newRole == RoleType.ASSISTANT) {
+                    userCourse.role = RoleType.ASSISTANT
+                    userCoursesRepository.save(userCourse)
+                }
+            }
+            // 새 역할이 STUDENT로 설정되었을 때는 강의의 관리자에서 등록 해제 (redis) + user_courses 엔티티의 role도 STUDENT로 업데이트
+            else if (newRole == RoleType.STUDENT) {
+                redisService.removeUserFromCourseManagerList(course.code, course.clss, targetUser.email)
+            }
+
+            // 대상 유저의 역할 업데이트 후 저장 (STUDENT 제외)
+            if (newRole != RoleType.STUDENT) {
+                targetUser.role = newRole
+                userRepository.save(targetUser)
+            }
+        } else {
+            // courseId가 null이면 모든 가입 강의에 대해 업데이트 (STUDENT만 해당)
+            targetUser.courses.forEach { userCourse ->
+                val course = userCourse.course
+                if (newRole == RoleType.STUDENT) {
+                    redisService.removeUserFromCourseManagerList(course.code, course.clss, targetUser.email)
+                }
+            }
+
+            // 대상 유저의 역할 업데이트 후 저장
+            targetUser.role = newRole
+            userRepository.save(targetUser)
+        }
     }
 
     @Transactional

@@ -17,8 +17,9 @@ data class UserCourses(
     @JoinColumn(name = "user_id", nullable = false)
     val user: User,
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    val jcode: Boolean,
+    var role: RoleType,
 
     @OneToMany(mappedBy = "userCourse", cascade = [CascadeType.ALL], orphanRemoval = true)
     val jcodes: List<Jcode> = mutableListOf(),

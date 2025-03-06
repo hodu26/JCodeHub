@@ -43,10 +43,6 @@ class JCodeService(
             )
         )
 
-        // UserCourses 테이블의 jcode 값을 true로 변경 (JCode 생성 시)
-        val updatedUserCourse = userCourse.copy(jcode = true)
-        userCoursesRepository.save(updatedUserCourse)
-
         return JCodeDto(
             jcodeId = jCode.id,
             jcodeUrl = jCode.jcodeUrl,
@@ -65,11 +61,6 @@ class JCodeService(
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "JCode not found for the specified user and course")
 
         jCodeRepository.delete(jCode)
-
-        // UserCourses 테이블의 jcode 값을 false로 변경 (JCode 삭제 시)
-        val userCourse = jCode.userCourse
-        val updatedUserCourse = userCourse.copy(jcode = false)
-        userCoursesRepository.save(updatedUserCourse)
 
         // Redis에서도 해당 정보를 삭제
         redisService.deleteUserCourse(user.email, course.code, course.clss)
