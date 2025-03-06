@@ -6,14 +6,12 @@ import org.jbnu.jdevops.jcodeportallogin.dto.watcher.GraphDataListDto
 import org.jbnu.jdevops.jcodeportallogin.dto.watcher.SnapshotAvgDto
 import org.jbnu.jdevops.jcodeportallogin.service.watcher.WatcherStudentService
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 
-@Tag(name = "Watcher API", description = "Watcher 정보 수집 중계 API")
+@Tag(name = "Watcher API", description = "Watcher 스냅샷 수집 정보 중계 API")
 @RestController
 @RequestMapping("/api/watcher")
-@PreAuthorize("hasAnyRole('ADMIN', 'PROFESSOR', 'ASSISTANT')") // ADMIN 권한이 없는 사용자는 모두 접근 불가
 class WatcherController(private val watcherStudentService: WatcherStudentService) {
 
     @Operation(

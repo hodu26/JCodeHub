@@ -5,13 +5,11 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.jbnu.jdevops.jcodeportallogin.dto.watcher.WatcherAssignmentDto
 import org.jbnu.jdevops.jcodeportallogin.service.watcher.WatcherAssignmentService
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
-@Tag(name = "Watcher Assignment API", description = "Watcher 정보 수집 중계 API")
+@Tag(name = "Watcher Assignment API", description = "Watcher 과제 수집 정보 중계 API")
 @RestController
 @RequestMapping("/api/watcher/assignments")
-@PreAuthorize("hasAnyRole('ADMIN', 'PROFESSOR', 'ASSISTANT')") // ADMIN 권한이 없는 사용자는 모두 접근 불가
 class WatcherAssignmetController(private val watcherAssignmentService: WatcherAssignmentService) {
 
     @Operation(
