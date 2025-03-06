@@ -1,7 +1,7 @@
 package org.jbnu.jdevops.jcodeportallogin.controller.watcher
 
+import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.jbnu.jdevops.jcodeportallogin.dto.watcher.GraphDataDto
 import org.jbnu.jdevops.jcodeportallogin.dto.watcher.GraphDataListDto
 import org.jbnu.jdevops.jcodeportallogin.dto.watcher.SnapshotAvgDto
 import org.jbnu.jdevops.jcodeportallogin.service.watcher.WatcherStudentService
@@ -16,6 +16,10 @@ import org.springframework.web.bind.annotation.*
 @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSOR', 'ASSISTANT')") // ADMIN 권한이 없는 사용자는 모두 접근 불가
 class WatcherController(private val watcherStudentService: WatcherStudentService) {
 
+    @Operation(
+        summary = "파일 스냅샷 평균 데이터 조회",
+        description = "특정 파일의 스냅샷 평균 데이터를 조회합니다."
+    )
     @GetMapping("/snapshot_avg/files/{fileName}")
     fun getSnapshotAverage(
         @PathVariable fileName: String,
@@ -29,6 +33,10 @@ class WatcherController(private val watcherStudentService: WatcherStudentService
         else ResponseEntity.notFound().build()
     }
 
+    @Operation(
+        summary = "과제 스냅샷 평균 데이터 조회",
+        description = "특정 과제의 스냅샷 평균 데이터를 조회합니다."
+    )
     @GetMapping("/assignments/snapshot_avg")
     fun getAssingnmentSnapshotAverage(
         @RequestParam course: Long,        // courseId
@@ -41,6 +49,10 @@ class WatcherController(private val watcherStudentService: WatcherStudentService
         else ResponseEntity.notFound().build()
     }
 
+    @Operation(
+        summary = "그래프 데이터 조회",
+        description = "지정된 interval, course, assignment, user에 대한 그래프 데이터를 조회합니다."
+    )
     @GetMapping("/graph_data/interval/{interval}")
     fun getGraphData(
         @PathVariable interval: Long,
