@@ -50,10 +50,6 @@ class SecurityConfig {
                     .requestMatchers("/login", "/error", "/oauth2/**").permitAll()
                     .requestMatchers("/api/auth/signup", "/api/auth/login/basic", "/api/auth/login/oidc/success").permitAll()
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                    .requestMatchers("/api/user/info", "/api/user/courses", "/api/user/**").permitAll()  // 임시
-                    .requestMatchers("/api/user/**").hasAuthority("ADMIN")  // 임시
-                    .requestMatchers("/api/user/student", "/api/user/assistant", "/api/user/professor").hasAuthority("ADMIN")
-                    .requestMatchers("/api/**").permitAll()  // 임시
                     .requestMatchers("/api/**").authenticated()
                     .anyRequest().authenticated()  // 모든 요청에 대해 인증 요구
             }
