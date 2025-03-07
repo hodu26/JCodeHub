@@ -40,21 +40,23 @@ class CourseService(
 
         // 만약 현재 사용자가 ASSISTANT라면 ASSISTANT 역할인 강의만 필터링
         val filteredUserCourses = if (currentUser.role == RoleType.ASSISTANT) {
-            userCourses.filter { it.role == RoleType.ASSISTANT }
+            userCoursesRepository.findByCourseIdAndRole(courseId, RoleType.ASSISTANT)
         } else {
             userCourses
         }
 
-        return filteredUserCourses.map {
-            val user = it.user
-            UserInfoDto(
-                userId = user.id,
-                name = user.name,
-                email = user.email,
-                role = user.role,
-                studentNum = user.studentNum
-            )
-        }
+       return filteredUserCourses.map {
+           val user = it.user
+           val role = it.role
+           UserInfoDto(
+               userId = user.id,
+               name = user.name,
+               email = user.email,
+               role = user.role,
+               courseRole = role,
+               studentNum = user.studentNum
+           )
+       }
     }
 
     // 강의별 과제 조회

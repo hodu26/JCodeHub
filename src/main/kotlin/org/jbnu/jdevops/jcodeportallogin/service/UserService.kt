@@ -319,30 +319,30 @@ class UserService(
             // 새 역할이 ASSISTANT, PROFESSOR로 설정되었을 때는 강의의 관리자로 등록 (redis)
             if (newRole == RoleType.ASSISTANT || newRole == RoleType.PROFESSOR) {
                 redisService.addUserToCourseManagerList(course.code, course.clss, targetUser.email)
-
-                // 새 역할이 ASSISTANT인 경우, user_courses 엔티티의 role도 ASSISTANT로 업데이트
-                if (newRole == RoleType.ASSISTANT) {
-                    userCourse.role = RoleType.ASSISTANT
-                    userCoursesRepository.save(userCourse)
-                }
             }
             // 새 역할이 STUDENT로 설정되었을 때는 강의의 관리자에서 등록 해제 (redis) + user_courses 엔티티의 role도 STUDENT로 업데이트
             else if (newRole == RoleType.STUDENT) {
                 redisService.removeUserFromCourseManagerList(course.code, course.clss, targetUser.email)
             }
 
-            // 대상 유저의 역할 업데이트 후 저장 (STUDENT 제외)
-            if (newRole != RoleType.STUDENT) {
+            userCourse.role = newRole
+            userCoursesRepository.save(userCourse)
+
+            // 대상 유저의 역할 업데이트 후 저장 (ASSISTANT는 하나라도 ASSISTANT를 가지고 있을 시 업데이트 X)
+            if (!(newRole != RoleType.STUDENT && userCoursesRepository.findByUserEmailAndRole(currentUser.email, currentUser.role).isNotEmpty())) {
                 targetUser.role = newRole
                 userRepository.save(targetUser)
             }
         } else {
-            // courseId가 null이면 모든 가입 강의에 대해 업데이트 (STUDENT만 해당)
+            // courseId가 null이면 모든 가입 강의에 대해 업데이트 (STUDENT, PROFESSOR만 해당)
             targetUser.courses.forEach { userCourse ->
                 val course = userCourse.course
-                if (newRole == RoleType.STUDENT) {
+                if (newRole == RoleType.STUDENT || newRole == RoleType.PROFESSOR) {
                     redisService.removeUserFromCourseManagerList(course.code, course.clss, targetUser.email)
                 }
+
+                userCourse.role = newRole
+                userCoursesRepository.save(userCourse)
             }
 
             // 대상 유저의 역할 업데이트 후 저장

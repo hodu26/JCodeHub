@@ -8,5 +8,6 @@ data class UserInfoDto(
     val name: String?,
     val email: String,
     val role: RoleType,
+    val courseRole: RoleType? = null,
     val studentNum: Int?
 )
