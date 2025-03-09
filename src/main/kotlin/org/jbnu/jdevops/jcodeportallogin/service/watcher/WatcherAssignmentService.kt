@@ -4,6 +4,7 @@ import org.jbnu.jdevops.jcodeportallogin.dto.watcher.AssingmentTotalGraphListDat
 import org.jbnu.jdevops.jcodeportallogin.dto.watcher.WatcherAssignmentDto
 import org.jbnu.jdevops.jcodeportallogin.repo.AssignmentRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.CourseRepository
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -12,6 +13,7 @@ import java.time.LocalDateTime
 
 @Service
 class WatcherAssignmentService(
+    @Qualifier("watcherWebClient")
     private val webClient: WebClient,
     private val assignmentRepository: AssignmentRepository,
     private val courseRepository: CourseRepository
@@ -23,7 +25,7 @@ class WatcherAssignmentService(
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
 
-        val classDiv = "${course.code}-${course.clss}"
+        val classDiv = "${course.code.lowercase()}-${course.clss}"
 
         return try {
             webClient.get()
@@ -48,7 +50,7 @@ class WatcherAssignmentService(
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
 
-        val classDiv = "${course.code}-${course.clss}"
+        val classDiv = "${course.code.lowercase()}-${course.clss}"
 
         return try {
             webClient.get()

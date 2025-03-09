@@ -7,14 +7,26 @@ import org.springframework.web.reactive.function.client.WebClient
 
 @Configuration
 class WebClientConfig {
+
     @Value("\${watcher.url}")
     private lateinit var watcherUrl: String
 
+    @Value("\${generator.url}")
+    private lateinit var generatorUrl: String
+
     @Bean
-    fun webClient(): WebClient {
+    fun watcherWebClient(): WebClient {
         return WebClient.builder()
             .baseUrl(watcherUrl)
             .build()
     }
+
+    @Bean
+    fun generatorWebClient(): WebClient {
+        return WebClient.builder()
+            .baseUrl(generatorUrl)
+            .build()
+    }
 }
+
 

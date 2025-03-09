@@ -5,6 +5,7 @@ import org.jbnu.jdevops.jcodeportallogin.repo.AssignmentRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.CourseRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.UserCoursesRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.UserRepository
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -13,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException
 
 @Service
 class WatcherSelectionService (
+    @Qualifier("watcherWebClient")
     private val webClient: WebClient,
     private val assignmentRepository: AssignmentRepository,
     private val courseRepository: CourseRepository,
@@ -32,7 +34,7 @@ class WatcherSelectionService (
         val userCourse = userCoursesRepository.findByUserIdAndCourseId(user.id, course.id)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "UserCourse not found")
 
-        val classDiv = "${course.code}-${course.clss}"
+        val classDiv = "${course.code.lowercase()}-${course.clss}"
 
         return try {
             webClient.get()
@@ -63,7 +65,7 @@ class WatcherSelectionService (
         val userCourse = userCoursesRepository.findByUserIdAndCourseId(user.id, course.id)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "UserCourse not found")
 
-        val classDiv = "${course.code}-${course.clss}"
+        val classDiv = "${course.code.lowercase()}-${course.clss}"
 
         return try {
             webClient.get()
