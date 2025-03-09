@@ -5,7 +5,8 @@ data class JCodeRequestDto(
     val deployment_name: String,
     val service_name: String,
     val app_label: String,
-    val file_path: String
+    val file_path: String,
+    val student_num: String
 )
 
 data class JCodeDeleteRequestDto(
