@@ -9,7 +9,7 @@ data class Assignment(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
-    @ManyToOne
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
     @JoinColumn(name = "course_id", nullable = false)
     val course: Course,
 

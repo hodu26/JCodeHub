@@ -9,19 +9,19 @@ data class UserCourses(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
-    @ManyToOne
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
     @JoinColumn(name = "course_id", nullable = false)
-    val course: Course,
+    var course: Course,
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    val user: User,
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id")
+    var user: User,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var role: RoleType,
 
-    @OneToMany(mappedBy = "userCourse", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @OneToMany(mappedBy = "userCourse", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
     val jcodes: List<Jcode> = mutableListOf(),
 
     @Column(nullable = false, updatable = false)
