@@ -116,14 +116,19 @@ class UserController(
         @RequestBody joinRequest: CourseJoinDto,
         request: HttpServletRequest,
         authentication: Authentication
-    ): ResponseEntity<String> {
+    ): ResponseEntity<Map<String, Any>> {
         val email = authentication.principal as? String
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
 
         // courseId 대신, joinRequest.courseKey를 이용하여 강의를 조회하고 가입 처리
-        userService.joinCourse(email, joinRequest.courseKey)
+        val courseId = userService.joinCourse(email, joinRequest.courseKey)
 
-        return ResponseEntity.ok("Successfully joined the course")
+        // courseId와 메시지를 Map으로 묶어서 반환
+        val response = mapOf(
+            "courseId" to courseId,
+            "msg" to "Successfully joined the course"
+        )
+        return ResponseEntity.ok(response)
     }
 
 
@@ -133,12 +138,18 @@ class UserController(
         description = "현재 인증된 사용자가 특정 강의에서 탈퇴합니다."
     )
     @DeleteMapping("/me/courses/{courseId}")
-    fun leaveCourse(@PathVariable courseId: Long, request: HttpServletRequest, authentication: Authentication): ResponseEntity<String> {
+    fun leaveCourse(@PathVariable courseId: Long, request: HttpServletRequest, authentication: Authentication): ResponseEntity<Map<String, Any>> {
         val email = authentication.principal as? String
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
 
         userService.leaveCourse(courseId, email)
-        return ResponseEntity.ok("User successfully left the course")
+
+        // courseId와 메시지를 Map으로 묶어서 반환
+        val response = mapOf(
+            "courseId" to courseId,
+            "msg" to "Successfully left the course"
+        )
+        return ResponseEntity.ok(response)
     }
 
     //  일반 로그인 jwt 인증 함수

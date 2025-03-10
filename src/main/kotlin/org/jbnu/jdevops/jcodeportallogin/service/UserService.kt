@@ -183,7 +183,7 @@ class UserService(
     }
 
     // 유저 강의 가입
-    fun joinCourse(email: String, courseKey: String) {
+    fun joinCourse(email: String, courseKey: String): Long {
         // 입력된 courseKey가 "code-clss-randomPart" 형식인지 확인하고, code와 clss 추출
         val parts = courseKey.split("-")
         if (parts.size < 3) {
@@ -232,10 +232,13 @@ class UserService(
                 redisService.addUserToCourseManagerList(course.code, course.clss, email)
             }   
         }
+
+        // 가입한 강의의 courseId 반환
+        return course.id
     }
 
     // 유저 강의 탈퇴 (연관된 정보 삭제)
-    fun leaveCourse(courseId: Long, email: String) {
+    fun leaveCourse(courseId: Long, email: String): Long {
         val user = userRepository.findByEmail(email)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
 
@@ -255,6 +258,9 @@ class UserService(
 
         // Redis에서 해당 강의의 참여자 목록에서 해당 유저(email) 제거
         redisService.removeUserFromCourseManagerList(course.code, course.clss, email)
+
+        // 탈퇴한 강의의 courseId 반환
+        return course.id
     }
 
 
