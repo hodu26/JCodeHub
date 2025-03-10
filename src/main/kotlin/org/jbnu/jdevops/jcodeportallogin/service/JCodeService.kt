@@ -26,7 +26,7 @@ class JCodeService(
     private val userCoursesRepository: UserCoursesRepository
 ) {
     // JCode 생성
-    fun createJCode(courseId: Long, userId: Long, email: String, token: String): JCodeDto {
+    fun createJCode(courseId: Long, userEmail: String, email: String, token: String): JCodeDto {
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
 
@@ -43,7 +43,7 @@ class JCodeService(
         }
 
         // 생성하려는 jcode의 주체가 현재 요청한 주체와 다를 경우 생성 불가 (ADMIN은 전부 가능)
-        if (user.role != RoleType.ADMIN && user.id != userId) {
+        if (user.role != RoleType.ADMIN && user.email != userEmail) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "User role not allowed")
         }
 
@@ -91,8 +91,8 @@ class JCodeService(
     }
 
     // JCode 삭제 (관리자 전용)
-    fun deleteJCode(userId: Long, courseId: Long, token: String) {
-        val user = userRepository.findById(userId)
+    fun deleteJCode(userEmail: String, courseId: Long, token: String) {
+        val user = userRepository.findByEmail(userEmail)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }

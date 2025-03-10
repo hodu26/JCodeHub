@@ -3,6 +3,7 @@ package org.jbnu.jdevops.jcodeportallogin.controller
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.jbnu.jdevops.jcodeportallogin.dto.JCodeDto
+import org.jbnu.jdevops.jcodeportallogin.dto.JCodeMainRequestDto
 import org.jbnu.jdevops.jcodeportallogin.service.JCodeService
 import org.jbnu.jdevops.jcodeportallogin.service.token.JwtAuthService
 import org.jbnu.jdevops.jcodeportallogin.service.token.TokenType
@@ -15,7 +16,7 @@ import org.springframework.web.server.ResponseStatusException
 
 @Tag(name = "JCode Admin API", description = "JCode 관리 API (feat. 관리자)")
 @RestController
-@RequestMapping("/api/users/{userId}/courses/{courseId}/jcodes")
+@RequestMapping("/api/courses/{courseId}/jcodes")
 class JCodeController(
     private val jCodeService: JCodeService,
     private val jwtAuthService: JwtAuthService
@@ -27,7 +28,7 @@ class JCodeController(
     )
     @PostMapping
     fun createJCode(
-        @PathVariable userId: Long,
+        @RequestBody jcodeMainRequestDto: JCodeMainRequestDto,
         @PathVariable courseId: Long,
         @RequestHeader("Authorization") authorization: String,
         authentication: Authentication
@@ -41,7 +42,7 @@ class JCodeController(
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
         }
 
-        return ResponseEntity.ok(jCodeService.createJCode(courseId, userId, email, token))
+        return ResponseEntity.ok(jCodeService.createJCode(courseId, jcodeMainRequestDto.userEmail, email, token))
     }
 
     // JCode 삭제 (관리자 전용)
@@ -52,7 +53,7 @@ class JCodeController(
     @PreAuthorize("hasRole('ADMIN')") // ADMIN 권한이 없는 사용자는 모두 접근 불가
     @DeleteMapping
     fun deleteJCode(
-        @PathVariable userId: Long,
+        @RequestBody jcodeMainRequestDto: JCodeMainRequestDto,
         @PathVariable courseId: Long,
         @RequestHeader("Authorization") authorization: String,
     ): ResponseEntity<String> {
@@ -62,7 +63,7 @@ class JCodeController(
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
         }
 
-        jCodeService.deleteJCode(userId, courseId, token)
+        jCodeService.deleteJCode(jcodeMainRequestDto.userEmail, courseId, token)
         return ResponseEntity.ok("JCode deleted successfully")
     }
 }
