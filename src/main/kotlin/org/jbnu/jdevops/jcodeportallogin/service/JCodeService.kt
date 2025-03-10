@@ -86,7 +86,6 @@ class JCodeService(
 
         return JCodeDto(
             jcodeId = jCode.id,
-            jcodeUrl = jCode.jcodeUrl,
             courseName = jCode.course.name
         )
     }
