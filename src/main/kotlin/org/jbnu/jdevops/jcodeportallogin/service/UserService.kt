@@ -144,8 +144,7 @@ class UserService(
         return jcodeRepository.findByUserId(user.id).map {
             JCodeDto(
                 jcodeId = it.id,
-                courseName = it.course.name,
-                jcodeUrl = it.jcodeUrl
+                courseName = it.course.name
             )
         }
     }
