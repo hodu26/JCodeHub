@@ -89,14 +89,13 @@ class CourseController(
         return ResponseEntity.ok("Course deleted successfully")
     }
 
-    // 관리자용 강의 상세 정보 조회 (ADMIN 전용)
+    // 강의 상세 정보 조회
     @Operation(
-        summary = "관리자용 강의 상세 정보 조회",
-        description = "관리자가 특정 강의의 상세 정보를 조회합니다. (ADMIN 전용)"
+        summary = "강의 상세 정보 조회",
+        description = "특정 강의의 상세 정보를 조회합니다."
     )
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/{courseId}/admin/details")
-    fun getCourseDetailsForAdmin(@PathVariable courseId: Long): ResponseEntity<UserCourseDetailsDto> {
-        return ResponseEntity.ok(courseService.getCourseDetailsForAdmin(courseId))
+    @GetMapping("/{courseId}details")
+    fun getCourseDetails(@PathVariable courseId: Long): ResponseEntity<UserCourseDetailsDto> {
+        return ResponseEntity.ok(courseService.getCourseDetails(courseId))
     }
 }

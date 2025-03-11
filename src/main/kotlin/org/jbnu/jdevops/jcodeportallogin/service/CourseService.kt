@@ -171,7 +171,7 @@ class CourseService(
     }
 
     // 관리자용 강의 상세 정보 조회
-    fun getCourseDetailsForAdmin(courseId: Long): UserCourseDetailsDto {
+    fun getCourseDetails(courseId: Long): UserCourseDetailsDto {
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
             

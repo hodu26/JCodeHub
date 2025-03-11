@@ -38,5 +38,8 @@ data class Course(
 
     // UserCourses와의 일대다 관계 설정 (orphanRemoval 추가)
     @OneToMany(mappedBy = "course", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
-    val userCourses: List<UserCourses> = mutableListOf()
+    val userCourses: List<UserCourses> = mutableListOf(),
+
+    @OneToMany(mappedBy = "course", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var assignments: MutableList<Assignment> = mutableListOf()
 )
