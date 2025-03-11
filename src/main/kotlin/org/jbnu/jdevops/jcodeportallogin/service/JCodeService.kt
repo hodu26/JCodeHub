@@ -53,7 +53,8 @@ class JCodeService(
             service_name = "jcode-${course.code.lowercase()}-${course.clss}-${user.studentNum}-svc",
             app_label = "jcode-${course.code.lowercase()}-${course.clss}-${user.studentNum}",
             file_path = "${course.code.lowercase()}-${course.clss}-${user.studentNum}",
-            student_num = user.studentNum.toString()
+            student_num = user.studentNum.toString(),
+            use_vnc = course.vnc
         )
 
         // 외부 API 호출: JCode가 없으므로 쿠버네티스에 실제 JCode 생성 요청

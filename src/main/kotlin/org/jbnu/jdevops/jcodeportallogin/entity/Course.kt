@@ -27,9 +27,16 @@ data class Course(
     @Column(nullable = false) // 강의 분반
     val clss: Int,
 
+    @Column(nullable = false) // 강의 jcode vnc 사용 여부
+    val vnc: Boolean,
+
     @Column(nullable = false) // 강의 비번 (mutable - 수정 가능)
     var courseKey: String,
 
     @Column(nullable = false, updatable = false)
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+
+    // UserCourses와의 일대다 관계 설정 (orphanRemoval 추가)
+    @OneToMany(mappedBy = "course", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    val userCourses: List<UserCourses> = mutableListOf()
 )

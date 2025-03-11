@@ -8,5 +8,6 @@ data class CourseDto(
     val year: Int,
     val term: Int,
     val clss: Int,
+    val vnc: Boolean,
     val courseKey: String? = "hidden"
 )

@@ -56,11 +56,12 @@ class UserService(
     }
 
     @Transactional(readOnly = true)
-    fun getUserInfo(email: String): UserDto {
+    fun getUserInfo(email: String): UserInfoDto {
         val user = userRepository.findByEmail(email)
             ?: throw IllegalArgumentException("User not found with email: $email")
 
-        return UserDto(
+        return UserInfoDto(
+            userId = user.id,
             email = user.email,
             name = user.name,
             role = user.role,

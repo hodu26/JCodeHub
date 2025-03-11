@@ -3,7 +3,6 @@ package org.jbnu.jdevops.jcodeportallogin.repo
 import org.jbnu.jdevops.jcodeportallogin.entity.RoleType
 import org.jbnu.jdevops.jcodeportallogin.entity.UserCourses
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
 
 interface UserCoursesRepository : JpaRepository<UserCourses, Int> {
     fun findByUserId(userId: Long): List<UserCourses>

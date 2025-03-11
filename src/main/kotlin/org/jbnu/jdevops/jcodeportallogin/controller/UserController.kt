@@ -27,7 +27,7 @@ class UserController(
         description = "현재 인증된 사용자의 정보를 조회합니다."
     )
     @GetMapping("/me")
-    fun getUserInfo(request: HttpServletRequest, authentication: Authentication): ResponseEntity<UserDto> {
+    fun getUserInfo(request: HttpServletRequest, authentication: Authentication): ResponseEntity<UserInfoDto> {
         val email = authentication.principal as? String
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
 

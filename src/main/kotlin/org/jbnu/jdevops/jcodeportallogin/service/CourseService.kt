@@ -110,6 +110,7 @@ class CourseService(
             clss = courseDto.clss,
             year = courseDto.year,
             term = courseDto.term,
+            vnc = courseDto.vnc,
             courseKey = encryptedKey
         ))
         return CourseDto(
@@ -120,6 +121,7 @@ class CourseService(
             clss = course.clss,
             year = course.year,
             term = course.term,
+            vnc = course.vnc,
             courseKey = rawKey
         )
     }
@@ -137,16 +139,18 @@ class CourseService(
             professor = updatedCourse.professor,
             clss = updatedCourse.clss,
             year = updatedCourse.year,
-            term = updatedCourse.term
+            term = updatedCourse.term,
+            vnc = updatedCourse.vnc
         )
     }
 
-    // 강의 삭제
+    @Transactional
     fun deleteCourse(courseId: Long) {
-        if (!courseRepository.existsById(courseId)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found")
-        }
-        courseRepository.deleteById(courseId)
+        val course = courseRepository.findById(courseId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
+
+        // 강의 삭제
+        courseRepository.delete(course)
     }
 
     @Transactional(readOnly = true)
@@ -160,7 +164,8 @@ class CourseService(
                     professor = course.professor,
                     term = course.term,
                     year = course.year,
-                    clss = course.clss
+                    clss = course.clss,
+                    vnc = course.vnc
                 )
             }
     }

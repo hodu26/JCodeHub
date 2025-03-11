@@ -80,9 +80,9 @@ class CourseController(
         return ResponseEntity.ok(courseService.updateCourse(courseId, courseDto))
     }
 
-    // 강의 삭제 (ADMIN, PROFESSOR 전용)
-    @Operation(summary = "강의 삭제", description = "특정 강의를 삭제합니다. (ADMIN, PROFESSOR 전용)")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSOR')")
+    // 강의 삭제 (ADMIN 전용)
+    @Operation(summary = "강의 삭제", description = "특정 강의를 삭제합니다. (ADMIN 전용)")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{courseId}")
     fun deleteCourse(@PathVariable courseId: Long): ResponseEntity<String> {
         courseService.deleteCourse(courseId)
