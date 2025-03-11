@@ -364,4 +364,38 @@ class UserService(
         userRepository.delete(user)
     }
 
+    // 유저 강의 탈퇴 (연관된 정보 삭제)
+    fun chaseOutCourse(userId: Long, courseId: Long, email: String): Long {
+        val currentUser = userRepository.findByEmail(email)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "You're Info not found")
+
+        val user = userRepository.findById(userId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+
+        val course = courseRepository.findById(courseId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
+
+        if (currentUser.role != RoleType.ADMIN) {
+            val currentUserCourse = userCoursesRepository.findByUserIdAndCourseId(user.id, course.id)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "이 강의에 대한 권한이 없습니다.")
+        }
+
+        val userCourse = userCoursesRepository.findByUserIdAndCourseId(user.id, course.id)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User is not enrolled in this course")
+
+        // 해당 강의에서 사용된 JCode 삭제
+        jcodeRepository.findByUserCourse(userCourse)?.let {
+            jcodeRepository.delete(it)
+        }
+
+        // UserCourses에서 유저 삭제 (강의 탈퇴)
+        userCoursesRepository.delete(userCourse)
+
+        // Redis에서 해당 강의의 참여자 목록에서 해당 유저(email) 제거
+        redisService.removeUserFromCourseManagerList(course.code, course.clss, user.email)
+
+        // 탈퇴한 강의의 courseId 반환
+        return course.id
+    }
+
 }

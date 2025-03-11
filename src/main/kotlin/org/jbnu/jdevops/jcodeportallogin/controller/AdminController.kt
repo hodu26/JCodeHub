@@ -2,6 +2,7 @@ package org.jbnu.jdevops.jcodeportallogin.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import org.jbnu.jdevops.jcodeportallogin.dto.UserDto
 import org.jbnu.jdevops.jcodeportallogin.dto.UserInfoDto
 import org.jbnu.jdevops.jcodeportallogin.dto.UserRoleChangeDto
@@ -61,5 +62,24 @@ class AdminController(private val userService: UserService) {
     fun deleteUser(@PathVariable userId: Long): ResponseEntity<Unit> {
         userService.deleteUser(userId)
         return ResponseEntity.ok().build()
+    }
+
+    // 특정 유저 강의 탈퇴 (ADMIN, PROFESSOR 전용)
+    @Operation(summary = "특정 유저 강의 탈퇴", description = "관리자(or 교수)가 특정 사용자를 특정 강의에서 탈퇴시킵니다.")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSOR')")
+    @DeleteMapping("/{userId}/courses/{courseId}")
+    fun chaseOutCourse(@PathVariable userId: Long, @PathVariable courseId: Long, request: HttpServletRequest, authentication: Authentication): ResponseEntity<Map<String, Any>> {
+        val email = authentication.principal as? String
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
+
+        userService.chaseOutCourse(userId, courseId, email)
+
+        // courseId와 메시지를 Map으로 묶어서 반환
+        val response = mapOf(
+            "userId" to userId,
+            "courseId" to courseId,
+            "msg" to "Successfully left the course"
+        )
+        return ResponseEntity.ok(response)
     }
 }
