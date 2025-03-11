@@ -7,11 +7,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import jakarta.servlet.http.HttpServletRequest
 import org.jbnu.jdevops.jcodeportallogin.dto.*
+import org.jbnu.jdevops.jcodeportallogin.service.JCodeService
 import org.jbnu.jdevops.jcodeportallogin.service.token.JwtAuthService
 import org.jbnu.jdevops.jcodeportallogin.service.token.TokenType
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
+import org.springframework.security.core.token.TokenService
 import org.springframework.web.server.ResponseStatusException
 
 @Tag(name = "User API", description = "일반 사용자 관련 API (내 정보, 강의 가입/탈퇴 등)")
@@ -19,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException
 @RequestMapping("/api/users")
 class UserController(
     private val userService: UserService,
+    private val jCodeService: JCodeService,
     private val jwtAuthService: JwtAuthService
 ) {
     // 유저 정보 조회
@@ -150,6 +153,30 @@ class UserController(
             "msg" to "Successfully left the course"
         )
         return ResponseEntity.ok(response)
+    }
+
+    // JCode 삭제
+    @Operation(
+        summary = "JCode 삭제",
+        description = "특정 강의에 대해 자신의 JCode를 삭제합니다."
+    )
+    @DeleteMapping("/me/courses/{courseId}/jcodes")
+    fun deleteMyJCode(
+        @PathVariable courseId: Long,
+        @RequestHeader("Authorization") authorization: String,
+        authentication: Authentication
+    ): ResponseEntity<String> {
+        // Authorization 헤더에서 "Bearer " 접두사를 제거하여 토큰만 추출 및 검증
+        val token = authorization.removePrefix("Bearer").trim()
+        if (!jwtAuthService.validateToken(token, TokenType.ACCESS)) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
+        }
+
+        val email = authentication.principal as? String
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
+
+        jCodeService.deleteJCode(email, courseId, token)
+        return ResponseEntity.ok("JCode deleted successfully")
     }
 
     //  일반 로그인 jwt 인증 함수
