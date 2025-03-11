@@ -94,7 +94,7 @@ class CourseController(
         summary = "강의 상세 정보 조회",
         description = "특정 강의의 상세 정보를 조회합니다."
     )
-    @GetMapping("/{courseId}details")
+    @GetMapping("/{courseId}/details")
     fun getCourseDetails(@PathVariable courseId: Long): ResponseEntity<UserCourseDetailsDto> {
         return ResponseEntity.ok(courseService.getCourseDetails(courseId))
     }
