@@ -1,6 +1,5 @@
 package org.jbnu.jdevops.jcodeportallogin.service.watcher
 
-import org.jbnu.jdevops.jcodeportallogin.dto.watcher.WatcherSelectionsDto
 import org.jbnu.jdevops.jcodeportallogin.repo.AssignmentRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.CourseRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.UserCoursesRepository
@@ -28,11 +27,16 @@ class WatcherSelectionService (
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
 
+        if (assignment.course.id != course.id) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The assignment does not belong to the specified course")
+        }
+
         val user = userRepository.findById(userId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
 
-        val userCourse = userCoursesRepository.findByUserIdAndCourseId(user.id, course.id)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "UserCourse not found")
+        if (!userCoursesRepository.existsByUserIdAndCourseId(user.id, course.id)) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "UserCourse not found")
+        }
 
         val classDiv = "${course.code.lowercase()}-${course.clss}"
 
@@ -59,11 +63,16 @@ class WatcherSelectionService (
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
 
+        if (assignment.course.id != course.id) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The assignment does not belong to the specified course")
+        }
+
         val user = userRepository.findById(userId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
 
-        val userCourse = userCoursesRepository.findByUserIdAndCourseId(user.id, course.id)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "UserCourse not found")
+        if (!userCoursesRepository.existsByUserIdAndCourseId(user.id, course.id)) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "UserCourse not found")
+        }
 
         val classDiv = "${course.code.lowercase()}-${course.clss}"
 
