@@ -1,9 +1,9 @@
 package org.jbnu.jdevops.jcodeportallogin.service
 
-import org.jbnu.jdevops.jcodeportallogin.dto.AssignmentDto
-import org.jbnu.jdevops.jcodeportallogin.dto.CourseDto
-import org.jbnu.jdevops.jcodeportallogin.dto.UserCourseDetailsDto
-import org.jbnu.jdevops.jcodeportallogin.dto.UserInfoDto
+import org.jbnu.jdevops.jcodeportallogin.dto.assignment.AssignmentDto
+import org.jbnu.jdevops.jcodeportallogin.dto.course.CourseDto
+import org.jbnu.jdevops.jcodeportallogin.dto.usercourse.UserCourseDetailsDto
+import org.jbnu.jdevops.jcodeportallogin.dto.user.UserInfoDto
 import org.jbnu.jdevops.jcodeportallogin.entity.Course
 import org.jbnu.jdevops.jcodeportallogin.entity.RoleType
 import org.jbnu.jdevops.jcodeportallogin.repo.AssignmentRepository

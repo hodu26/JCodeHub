@@ -1,13 +1,12 @@
 package org.jbnu.jdevops.jcodeportallogin.service
 
-import org.jbnu.jdevops.jcodeportallogin.dto.AssignmentDto
+import org.jbnu.jdevops.jcodeportallogin.dto.assignment.AssignmentDto
 import org.jbnu.jdevops.jcodeportallogin.entity.Assignment
 import org.jbnu.jdevops.jcodeportallogin.repo.AssignmentRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.CourseRepository
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.http.HttpStatus
-import java.time.LocalDateTime
 
 @Service
 class AssignmentService(

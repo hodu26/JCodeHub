@@ -1,7 +1,7 @@
 package org.jbnu.jdevops.jcodeportallogin.entity
 
 import jakarta.persistence.*
-import org.jbnu.jdevops.jcodeportallogin.dto.UserDto
+import org.jbnu.jdevops.jcodeportallogin.dto.user.UserDto
 import java.time.LocalDateTime
 
 @Entity

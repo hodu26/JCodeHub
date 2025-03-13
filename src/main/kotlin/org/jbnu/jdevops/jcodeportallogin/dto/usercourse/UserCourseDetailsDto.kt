@@ -1,4 +1,6 @@
-package org.jbnu.jdevops.jcodeportallogin.dto
+package org.jbnu.jdevops.jcodeportallogin.dto.usercourse
+
+import org.jbnu.jdevops.jcodeportallogin.dto.assignment.AssignmentDto
 
 data class UserCourseDetailsDto(
     val courseId: Long,

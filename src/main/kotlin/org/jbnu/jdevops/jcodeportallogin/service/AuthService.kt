@@ -1,8 +1,7 @@
 package org.jbnu.jdevops.jcodeportallogin.service
 
 import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
-import org.jbnu.jdevops.jcodeportallogin.dto.LoginUserDto
+import org.jbnu.jdevops.jcodeportallogin.dto.auth.LoginUserDto
 
 import org.jbnu.jdevops.jcodeportallogin.entity.RoleType
 import org.jbnu.jdevops.jcodeportallogin.repo.LoginRepository

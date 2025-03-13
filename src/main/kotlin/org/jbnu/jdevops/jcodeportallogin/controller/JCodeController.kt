@@ -2,8 +2,8 @@ package org.jbnu.jdevops.jcodeportallogin.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.jbnu.jdevops.jcodeportallogin.dto.JCodeDto
-import org.jbnu.jdevops.jcodeportallogin.dto.JCodeMainRequestDto
+import org.jbnu.jdevops.jcodeportallogin.dto.jcode.JCodeDto
+import org.jbnu.jdevops.jcodeportallogin.dto.jcode.JCodeMainRequestDto
 import org.jbnu.jdevops.jcodeportallogin.service.JCodeService
 import org.jbnu.jdevops.jcodeportallogin.service.token.JwtAuthService
 import org.jbnu.jdevops.jcodeportallogin.service.token.TokenType

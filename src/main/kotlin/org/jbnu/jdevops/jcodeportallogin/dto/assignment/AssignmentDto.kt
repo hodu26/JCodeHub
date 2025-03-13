@@ -1,4 +1,4 @@
-package org.jbnu.jdevops.jcodeportallogin.dto
+package org.jbnu.jdevops.jcodeportallogin.dto.assignment
 
 import java.time.LocalDateTime
 

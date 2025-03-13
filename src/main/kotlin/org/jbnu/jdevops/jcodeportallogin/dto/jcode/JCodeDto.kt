@@ -1,4 +1,4 @@
-package org.jbnu.jdevops.jcodeportallogin.dto
+package org.jbnu.jdevops.jcodeportallogin.dto.jcode
 
 data class JCodeDto(
     val jcodeId: Long?,

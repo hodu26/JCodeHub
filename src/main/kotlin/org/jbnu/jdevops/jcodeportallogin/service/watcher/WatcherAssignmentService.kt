@@ -108,7 +108,7 @@ class WatcherAssignmentService(
     }
 
     // 학생용 그래프 데이터는 자신의 학번을 제외한 다른 학생의 학번 확인 불가능하도록 변경
-    private fun modifyGraphDataForStudent(data: AssingmentTotalGraphListData?, myStudentNum: Int?, totalStudents: Int): AssingmentTotalGraphListData? {
+    private fun modifyGraphDataForStudent(data: AssingmentTotalGraphListData?, myStudentNum: Int?, totalStudents: Int): AssingmentTotalGraphListData {
         // 기존 데이터 항목을 순차적인 번호로 변환
         val initialList = data?.results?.mapIndexed { index, graph ->
             if (graph.student_num == myStudentNum) {

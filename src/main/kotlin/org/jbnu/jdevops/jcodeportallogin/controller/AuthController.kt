@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.jbnu.jdevops.jcodeportallogin.dto.LoginUserDto
-import org.jbnu.jdevops.jcodeportallogin.dto.RegisterUserDto
+import org.jbnu.jdevops.jcodeportallogin.dto.auth.LoginUserDto
+import org.jbnu.jdevops.jcodeportallogin.dto.auth.RegisterUserDto
 import org.jbnu.jdevops.jcodeportallogin.service.*
 import org.jbnu.jdevops.jcodeportallogin.util.JwtUtil
 import org.springframework.http.HttpStatus

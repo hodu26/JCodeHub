@@ -1,4 +1,4 @@
-package org.jbnu.jdevops.jcodeportallogin.dto
+package org.jbnu.jdevops.jcodeportallogin.dto.usercourse
 
 // 유저별 강의 정보 DTO
 data class UserCoursesDto(

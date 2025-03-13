@@ -1,6 +1,6 @@
 package org.jbnu.jdevops.jcodeportallogin.service
 
-import org.jbnu.jdevops.jcodeportallogin.dto.*
+import org.jbnu.jdevops.jcodeportallogin.dto.jcode.*
 import org.jbnu.jdevops.jcodeportallogin.entity.Jcode
 import org.jbnu.jdevops.jcodeportallogin.entity.RoleType
 import org.jbnu.jdevops.jcodeportallogin.repo.JCodeRepository
@@ -8,7 +8,6 @@ import org.jbnu.jdevops.jcodeportallogin.repo.CourseRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.UserCoursesRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.UserRepository
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient

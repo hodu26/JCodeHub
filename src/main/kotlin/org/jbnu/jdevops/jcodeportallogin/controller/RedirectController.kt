@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.jbnu.jdevops.jcodeportallogin.dto.RedirectDto
+import org.jbnu.jdevops.jcodeportallogin.dto.jcode.RedirectDto
 import org.jbnu.jdevops.jcodeportallogin.repo.CourseRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.JCodeRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.UserRepository

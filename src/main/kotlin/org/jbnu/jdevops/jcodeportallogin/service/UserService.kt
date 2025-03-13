@@ -1,6 +1,13 @@
 package org.jbnu.jdevops.jcodeportallogin.service
 
-import org.jbnu.jdevops.jcodeportallogin.dto.*
+import org.jbnu.jdevops.jcodeportallogin.dto.assignment.AssignmentDto
+import org.jbnu.jdevops.jcodeportallogin.dto.auth.RegisterUserDto
+import org.jbnu.jdevops.jcodeportallogin.dto.jcode.JCodeDto
+import org.jbnu.jdevops.jcodeportallogin.dto.user.UserDto
+import org.jbnu.jdevops.jcodeportallogin.dto.user.UserInfoDto
+import org.jbnu.jdevops.jcodeportallogin.dto.user.UserProfileUpdateDto
+import org.jbnu.jdevops.jcodeportallogin.dto.usercourse.UserCourseDetailsDto
+import org.jbnu.jdevops.jcodeportallogin.dto.usercourse.UserCoursesDto
 import org.jbnu.jdevops.jcodeportallogin.entity.*
 import org.jbnu.jdevops.jcodeportallogin.repo.*
 import org.springframework.http.HttpStatus

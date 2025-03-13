@@ -3,9 +3,9 @@ package org.jbnu.jdevops.jcodeportallogin.controller
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
-import org.jbnu.jdevops.jcodeportallogin.dto.UserDto
-import org.jbnu.jdevops.jcodeportallogin.dto.UserInfoDto
-import org.jbnu.jdevops.jcodeportallogin.dto.UserRoleChangeDto
+import org.jbnu.jdevops.jcodeportallogin.dto.user.UserDto
+import org.jbnu.jdevops.jcodeportallogin.dto.user.UserInfoDto
+import org.jbnu.jdevops.jcodeportallogin.dto.user.UserRoleChangeDto
 import org.jbnu.jdevops.jcodeportallogin.service.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

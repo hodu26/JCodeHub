@@ -6,14 +6,18 @@ import org.jbnu.jdevops.jcodeportallogin.service.UserService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import jakarta.servlet.http.HttpServletRequest
-import org.jbnu.jdevops.jcodeportallogin.dto.*
+import org.jbnu.jdevops.jcodeportallogin.dto.course.CourseJoinDto
+import org.jbnu.jdevops.jcodeportallogin.dto.jcode.JCodeDto
+import org.jbnu.jdevops.jcodeportallogin.dto.user.UserInfoDto
+import org.jbnu.jdevops.jcodeportallogin.dto.user.UserProfileUpdateDto
+import org.jbnu.jdevops.jcodeportallogin.dto.usercourse.UserCourseDetailsDto
+import org.jbnu.jdevops.jcodeportallogin.dto.usercourse.UserCoursesDto
 import org.jbnu.jdevops.jcodeportallogin.service.JCodeService
 import org.jbnu.jdevops.jcodeportallogin.service.token.JwtAuthService
 import org.jbnu.jdevops.jcodeportallogin.service.token.TokenType
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
-import org.springframework.security.core.token.TokenService
 import org.springframework.web.server.ResponseStatusException
 
 @Tag(name = "User API", description = "일반 사용자 관련 API (내 정보, 강의 가입/탈퇴 등)")
