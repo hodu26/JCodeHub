@@ -28,7 +28,8 @@ data class JCodeRequestDto(
     @field:Size(max = 20, message = "Student number must be at most {max} characters")
     val student_num: String,
 
-    val use_vnc: Boolean
+    val use_vnc: Boolean,
+    val use_snapshot : Boolean
 )
 
 data class JCodeDeleteRequestDto(

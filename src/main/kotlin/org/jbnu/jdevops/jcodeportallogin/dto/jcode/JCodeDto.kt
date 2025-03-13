@@ -15,5 +15,7 @@ data class JCodeDto(
 data class JCodeMainRequestDto(
     @field:NotBlank(message = "{userDto.email.required}")
     @field:Size(max = 100, message = "{userDto.email.size}")
-    val userEmail: String
+    val userEmail: String,
+
+    val snapshot: Boolean = false
 )

@@ -7,6 +7,7 @@ import org.jbnu.jdevops.jcodeportallogin.repo.JCodeRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.CourseRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.UserCoursesRepository
 import org.jbnu.jdevops.jcodeportallogin.repo.UserRepository
+import org.jbnu.jdevops.jcodeportallogin.util.AuthorizationUtil
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
@@ -25,7 +26,7 @@ class JCodeService(
     private val userCoursesRepository: UserCoursesRepository
 ) {
     // JCode 생성
-    fun createJCode(courseId: Long, userEmail: String, email: String, token: String): JCodeDto {
+    fun createJCode(courseId: Long, userEmail: String, email: String, token: String, snapshot: Boolean): JCodeDto {
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
 
@@ -46,14 +47,22 @@ class JCodeService(
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "User role not allowed")
         }
 
+        // snapshot 권한 확인 (targetUserId를 0으로 둬서 자기 자신의 스냅샷도 열람 못하게 설정)
+        var file_path = "workspace/${course.code.lowercase()}-${course.clss}-${user.studentNum}"
+        if (snapshot) {
+            AuthorizationUtil.validateUserAuthority(user.role, user.id, 0, course.id, userCoursesRepository)
+            file_path = "${course.code.lowercase()}-${course.clss}"
+        }
+
         val jcodeRequestBody = JCodeRequestDto (
             namespace = "jcode-${course.code.lowercase()}-${course.clss}",
             deployment_name = "jcode-${course.code.lowercase()}-${course.clss}-${user.studentNum}",
             service_name = "jcode-${course.code.lowercase()}-${course.clss}-${user.studentNum}-svc",
             app_label = "jcode-${course.code.lowercase()}-${course.clss}-${user.studentNum}",
-            file_path = "${course.code.lowercase()}-${course.clss}-${user.studentNum}",
+            file_path = file_path,
             student_num = user.studentNum.toString(),
-            use_vnc = course.vnc
+            use_vnc = course.vnc,
+            use_snapshot = snapshot
         )
 
         // 외부 API 호출: JCode가 없으므로 쿠버네티스에 실제 JCode 생성 요청

@@ -42,7 +42,7 @@ class JCodeController(
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
         }
 
-        return ResponseEntity.ok(jCodeService.createJCode(courseId, jcodeMainRequestDto.userEmail, email, token))
+        return ResponseEntity.ok(jCodeService.createJCode(courseId, jcodeMainRequestDto.userEmail, email, token, jcodeMainRequestDto.snapshot))
     }
 
     // JCode 삭제 (관리자 전용)
