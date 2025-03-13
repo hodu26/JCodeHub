@@ -9,6 +9,7 @@ data class WatcherBuildLogDto(
     val cwd: String,
     val target_path: String,
     val timestamp: LocalDateTime,
+    val file_size: Long,
 )
 
 data class WatcherBuildLogListDto(

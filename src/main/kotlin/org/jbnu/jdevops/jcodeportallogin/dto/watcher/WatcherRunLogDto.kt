@@ -9,6 +9,7 @@ data class WatcherRunLogDto(
     val target_path: String,
     val process_type: String,
     val timestamp: LocalDateTime,
+    val file_size: Long,
 )
 
 data class WatcherRunLogListDto(
