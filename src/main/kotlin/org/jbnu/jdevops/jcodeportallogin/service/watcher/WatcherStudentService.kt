@@ -4,7 +4,9 @@ import org.jbnu.jdevops.jcodeportallogin.dto.watcher.GraphDataListDto
 import org.jbnu.jdevops.jcodeportallogin.dto.watcher.SnapshotAvgDto
 import org.jbnu.jdevops.jcodeportallogin.dto.watcher.WatcherBuildLogDto
 import org.jbnu.jdevops.jcodeportallogin.dto.watcher.WatcherRunLogDto
+import org.jbnu.jdevops.jcodeportallogin.entity.RoleType
 import org.jbnu.jdevops.jcodeportallogin.repo.*
+import org.jbnu.jdevops.jcodeportallogin.util.AuthorizationUtil
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpStatus
@@ -21,9 +23,17 @@ class WatcherStudentService(
     private val userRepository: UserRepository,
     private val userCoursesRepository: UserCoursesRepository
 ) {
-    fun getSnapshotAverage(fileName: String, courseId: Long, assignmentId: Long, userId: Long): SnapshotAvgDto? {
+    fun getSnapshotAverage(email: String, fileName: String, courseId: Long, assignmentId: Long, userId: Long): SnapshotAvgDto? {
+        val currentUser = userRepository.findByEmail(email)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Current User not found")
+
+        val targetUser = userRepository.findById(userId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Target User not found")
+
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
+
+        AuthorizationUtil.validateUserAuthority(currentUser.role, currentUser.id, targetUser.id, course.id, userCoursesRepository)
 
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
@@ -32,10 +42,7 @@ class WatcherStudentService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The assignment does not belong to the specified course")
         }
 
-        val user = userRepository.findById(userId)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
-
-        if (!userCoursesRepository.existsByUserIdAndCourseId(user.id, course.id)) {
+        if (!userCoursesRepository.existsByUserIdAndCourseId(targetUser.id, course.id)) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "UserCourse not found")
         }
 
@@ -46,7 +53,7 @@ class WatcherStudentService(
                 .uri { uriBuilder ->
                     uriBuilder
                         .path("/api/snapshot_avg/{class_div}/{hw_name}/{student_num}/{fileName}")
-                        .build(classDiv, assignment.name, user.studentNum, fileName)
+                        .build(classDiv, assignment.name, targetUser.studentNum, fileName)
                 }
                 .retrieve()
                 .bodyToMono(SnapshotAvgDto::class.java)
@@ -57,9 +64,17 @@ class WatcherStudentService(
         }
     }
 
-    fun getAssignmentSnapshotAverage(courseId: Long, assignmentId: Long, userId: Long): SnapshotAvgDto? {
+    fun getAssignmentSnapshotAverage(email: String, courseId: Long, assignmentId: Long, userId: Long): SnapshotAvgDto? {
+        val currentUser = userRepository.findByEmail(email)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Current User not found")
+
+        val targetUser = userRepository.findById(userId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Target User not found")
+
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
+
+        AuthorizationUtil.validateUserAuthority(currentUser.role, currentUser.id, targetUser.id, course.id, userCoursesRepository)
 
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
@@ -68,10 +83,7 @@ class WatcherStudentService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The assignment does not belong to the specified course")
         }
 
-        val user = userRepository.findById(userId)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
-
-        if (!userCoursesRepository.existsByUserIdAndCourseId(user.id, course.id)) {
+        if (!userCoursesRepository.existsByUserIdAndCourseId(targetUser.id, course.id)) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "UserCourse not found")
         }
 
@@ -82,7 +94,7 @@ class WatcherStudentService(
                 .uri { uriBuilder ->
                     uriBuilder
                         .path("/api/assignments/snapshot_avg/{class_div}/{hw_name}/{student_num}")
-                        .build(classDiv, assignment.name, user.studentNum)
+                        .build(classDiv, assignment.name, targetUser.studentNum)
                 }
                 .retrieve()
                 .bodyToMono(SnapshotAvgDto::class.java)
@@ -93,9 +105,17 @@ class WatcherStudentService(
         }
     }
 
-    fun getGraphData(interval: Long, courseId: Long, assignmentId: Long, userId: Long): GraphDataListDto? {
+    fun getGraphData(email:String, interval: Long, courseId: Long, assignmentId: Long, userId: Long): GraphDataListDto? {
+        val currentUser = userRepository.findByEmail(email)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Current User not found")
+
+        val targetUser = userRepository.findById(userId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Target User not found")
+
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
+
+        AuthorizationUtil.validateUserAuthority(currentUser.role, currentUser.id, targetUser.id, course.id, userCoursesRepository)
 
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
@@ -104,10 +124,7 @@ class WatcherStudentService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The assignment does not belong to the specified course")
         }
 
-        val user = userRepository.findById(userId)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
-
-        if (!userCoursesRepository.existsByUserIdAndCourseId(user.id, course.id)) {
+        if (!userCoursesRepository.existsByUserIdAndCourseId(targetUser.id, course.id)) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "UserCourse not found")
         }
 
@@ -118,7 +135,7 @@ class WatcherStudentService(
                 .uri { uriBuilder ->
                     uriBuilder
                         .path("/api/graph_data/{class_div}/{hw_name}/{student_num}/{interval}")
-                        .build(classDiv, assignment.name, user.studentNum, interval)
+                        .build(classDiv, assignment.name, targetUser.studentNum, interval)
                 }
                 .retrieve()
                 .bodyToMono(GraphDataListDto::class.java)
@@ -129,9 +146,17 @@ class WatcherStudentService(
         }
     }
 
-    fun getBuildLogs(courseId: Long, assignmentId: Long, userId: Long): List<WatcherBuildLogDto>? {
+    fun getBuildLogs(email: String, courseId: Long, assignmentId: Long, userId: Long): List<WatcherBuildLogDto>? {
+        val currentUser = userRepository.findByEmail(email)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Current User not found")
+
+        val targetUser = userRepository.findById(userId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Target User not found")
+
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
+
+        AuthorizationUtil.validateUserAuthority(currentUser.role, currentUser.id, targetUser.id, course.id, userCoursesRepository)
 
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
@@ -140,10 +165,7 @@ class WatcherStudentService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The assignment does not belong to the specified course")
         }
 
-        val user = userRepository.findById(userId)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
-
-        if (!userCoursesRepository.existsByUserIdAndCourseId(user.id, course.id)) {
+        if (!userCoursesRepository.existsByUserIdAndCourseId(targetUser.id, course.id)) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "UserCourse not found")
         }
 
@@ -154,7 +176,7 @@ class WatcherStudentService(
                 .uri { uriBuilder ->
                     uriBuilder
                         .path("/api/{class_div}/{hw_name}/{student_num}/logs/build")
-                        .build(classDiv, assignment.name, user.studentNum)
+                        .build(classDiv, assignment.name, targetUser.studentNum)
                 }
                 .retrieve()
                 .bodyToMono(object : ParameterizedTypeReference<List<WatcherBuildLogDto>>() {})  // List 파싱
@@ -165,9 +187,17 @@ class WatcherStudentService(
         }
     }
 
-    fun getRunLogs(courseId: Long, assignmentId: Long, userId: Long): List<WatcherRunLogDto>? {
+    fun getRunLogs(email: String, courseId: Long, assignmentId: Long, userId: Long): List<WatcherRunLogDto>? {
+        val currentUser = userRepository.findByEmail(email)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Current User not found")
+
+        val targetUser = userRepository.findById(userId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Target User not found")
+
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
+
+        AuthorizationUtil.validateUserAuthority(currentUser.role, currentUser.id, targetUser.id, course.id, userCoursesRepository)
 
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found") }
@@ -176,10 +206,7 @@ class WatcherStudentService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The assignment does not belong to the specified course")
         }
 
-        val user = userRepository.findById(userId)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
-
-        if (!userCoursesRepository.existsByUserIdAndCourseId(user.id, course.id)) {
+        if (!userCoursesRepository.existsByUserIdAndCourseId(targetUser.id, course.id)) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "UserCourse not found")
         }
 
@@ -190,7 +217,7 @@ class WatcherStudentService(
                 .uri { uriBuilder ->
                     uriBuilder
                         .path("/api/{class_div}/{hw_name}/{student_num}/logs/run")
-                        .build(classDiv, assignment.name, user.studentNum)
+                        .build(classDiv, assignment.name, targetUser.studentNum)
                 }
                 .retrieve()
                 .bodyToMono(object : ParameterizedTypeReference<List<WatcherRunLogDto>>() {})  // List 파싱

@@ -4,8 +4,11 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.jbnu.jdevops.jcodeportallogin.dto.watcher.*
 import org.jbnu.jdevops.jcodeportallogin.service.watcher.WatcherStudentService
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 
 
 @Tag(name = "Watcher API", description = "Watcher 스냅샷 수집 정보 중계 API")
@@ -22,9 +25,13 @@ class WatcherController(private val watcherStudentService: WatcherStudentService
         @PathVariable fileName: String,
         @RequestParam course: Long,        // courseId
         @RequestParam assignment: Long,    // assignmentId
-        @RequestParam user: Long           // userId
+        @RequestParam user: Long,          // userId
+        authentication: Authentication
     ): ResponseEntity<SnapshotAvgDto> {
-        val result = watcherStudentService.getSnapshotAverage(fileName, course, assignment, user)
+        val email = authentication.principal as? String
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
+
+        val result = watcherStudentService.getSnapshotAverage(email, fileName, course, assignment, user)
 
         return if (result != null) ResponseEntity.ok(result)
         else ResponseEntity.notFound().build()
@@ -38,9 +45,13 @@ class WatcherController(private val watcherStudentService: WatcherStudentService
     fun getAssingnmentSnapshotAverage(
         @RequestParam course: Long,        // courseId
         @RequestParam assignment: Long,    // assignmentId
-        @RequestParam user: Long           // userId
+        @RequestParam user: Long,          // userId
+        authentication: Authentication
     ): ResponseEntity<SnapshotAvgDto> {
-        val result = watcherStudentService.getAssignmentSnapshotAverage(course, assignment, user)
+        val email = authentication.principal as? String
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
+
+        val result = watcherStudentService.getAssignmentSnapshotAverage(email, course, assignment, user)
 
         return if (result != null) ResponseEntity.ok(result)
         else ResponseEntity.notFound().build()
@@ -55,9 +66,13 @@ class WatcherController(private val watcherStudentService: WatcherStudentService
         @PathVariable interval: Long,
         @RequestParam course: Long,        // courseId
         @RequestParam assignment: Long,    // assignmentId
-        @RequestParam user: Long           // userId
+        @RequestParam user: Long,          // userId
+        authentication: Authentication
     ): ResponseEntity<GraphDataListDto> {
-        val result = watcherStudentService.getGraphData(interval, course, assignment, user)
+        val email = authentication.principal as? String
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
+
+        val result = watcherStudentService.getGraphData(email, interval, course, assignment, user)
 
         return if (result != null) ResponseEntity.ok(result)
         else ResponseEntity.notFound().build()
@@ -71,9 +86,13 @@ class WatcherController(private val watcherStudentService: WatcherStudentService
     fun getBuildLogsData(
         @RequestParam course: Long,        // courseId
         @RequestParam assignment: Long,    // assignmentId
-        @RequestParam user: Long           // userId
+        @RequestParam user: Long,          // userId
+        authentication: Authentication
     ): ResponseEntity<WatcherBuildLogListDto> {
-        val buildLogs = watcherStudentService.getBuildLogs(course, assignment, user)
+        val email = authentication.principal as? String
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
+
+        val buildLogs = watcherStudentService.getBuildLogs(email, course, assignment, user)
 
         return if (buildLogs != null) ResponseEntity.ok(WatcherBuildLogListDto(buildLogs))
         else ResponseEntity.notFound().build()
@@ -87,9 +106,13 @@ class WatcherController(private val watcherStudentService: WatcherStudentService
     fun getRunLogsData(
         @RequestParam course: Long,        // courseId
         @RequestParam assignment: Long,    // assignmentId
-        @RequestParam user: Long           // userId
+        @RequestParam user: Long,          // userId
+        authentication: Authentication
     ): ResponseEntity<WatcherRunLogListDto> {
-        val runLogs = watcherStudentService.getRunLogs(course, assignment, user)
+        val email = authentication.principal as? String
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
+
+        val runLogs = watcherStudentService.getRunLogs(email, course, assignment, user)
 
         return if (runLogs != null) ResponseEntity.ok(WatcherRunLogListDto(runLogs))
         else ResponseEntity.notFound().build()

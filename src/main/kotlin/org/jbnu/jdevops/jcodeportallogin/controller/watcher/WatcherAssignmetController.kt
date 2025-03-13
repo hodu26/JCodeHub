@@ -26,7 +26,7 @@ class WatcherAssignmetController(private val watcherAssignmentService: WatcherAs
     @GetMapping("{assignmentId}/courses/{courseId}")
     fun getAssignmentsData(
         @PathVariable courseId: Long,        // courseId
-        @PathVariable assignmentId: Long,    // assignmentId
+        @PathVariable assignmentId: Long     // assignmentId
     ): ResponseEntity<WatcherAssignmentDto> {
         val result = watcherAssignmentService.getAssignmentsData(courseId, assignmentId)
 
@@ -66,7 +66,7 @@ class WatcherAssignmetController(private val watcherAssignmentService: WatcherAs
     @GetMapping("{assignmentId}/courses/{courseId}/logs/build")
     fun getBuildAvgData(
         @PathVariable courseId: Long,        // courseId
-        @PathVariable assignmentId: Long,    // assignmentId
+        @PathVariable assignmentId: Long     // assignmentId
     ): ResponseEntity<WatcherLogAvgDto> {
         val result = watcherAssignmentService.getBuildLogAvg(courseId, assignmentId)
 
@@ -81,7 +81,7 @@ class WatcherAssignmetController(private val watcherAssignmentService: WatcherAs
     @GetMapping("{assignmentId}/courses/{courseId}/logs/run")
     fun getRunAvgData(
         @PathVariable courseId: Long,        // courseId
-        @PathVariable assignmentId: Long,    // assignmentId
+        @PathVariable assignmentId: Long     // assignmentId
     ): ResponseEntity<WatcherLogAvgDto> {
         val result = watcherAssignmentService.getRunLogAvg(courseId, assignmentId)
 

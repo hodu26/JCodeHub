@@ -4,8 +4,11 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.jbnu.jdevops.jcodeportallogin.dto.watcher.WatcherSelectionsDto
 import org.jbnu.jdevops.jcodeportallogin.service.watcher.WatcherSelectionService
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 
 @Tag(name = "Watcher Selection API", description = "Watcher 선택 목록 중계 API")
 @RestController
@@ -20,9 +23,13 @@ class WatcherSelectionController(private val watcherSelectionService: WatcherSel
     fun getFileSelections(
         @RequestParam course: Long,        // courseId
         @RequestParam assignment: Long,    // assignmentId
-        @RequestParam user: Long           // userId
+        @RequestParam user: Long,          // userId
+        authentication: Authentication
     ): ResponseEntity<WatcherSelectionsDto> {
-        val selections = watcherSelectionService.getFileSelections(course, assignment, user)
+        val email = authentication.principal as? String
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
+
+        val selections = watcherSelectionService.getFileSelections(email, course, assignment, user)
 
         return if (selections != null) ResponseEntity.ok(WatcherSelectionsDto(selections))
         else ResponseEntity.notFound().build()
@@ -37,9 +44,13 @@ class WatcherSelectionController(private val watcherSelectionService: WatcherSel
         @PathVariable filename: String,
         @RequestParam course: Long,        // courseId
         @RequestParam assignment: Long,    // assignmentId
-        @RequestParam user: Long           // userId
+        @RequestParam user: Long,          // userId
+        authentication: Authentication
     ): ResponseEntity<WatcherSelectionsDto> {
-        val selections = watcherSelectionService.getTimestampSelections(filename, course, assignment, user)
+        val email = authentication.principal as? String
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
+
+        val selections = watcherSelectionService.getTimestampSelections(email, filename, course, assignment, user)
 
         return if (selections != null) ResponseEntity.ok(WatcherSelectionsDto(selections))
         else ResponseEntity.notFound().build()
