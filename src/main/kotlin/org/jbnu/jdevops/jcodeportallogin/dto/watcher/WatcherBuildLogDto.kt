@@ -7,6 +7,7 @@ data class WatcherBuildLogDto(
     val cmdline: String,
     val exit_code: Int,
     val cwd: String,
+    val target_path: String,
     val timestamp: LocalDateTime,
 )
 
