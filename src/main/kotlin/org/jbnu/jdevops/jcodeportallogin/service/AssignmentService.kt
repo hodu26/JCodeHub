@@ -20,6 +20,10 @@ class AssignmentService(
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
 
+        if(assignmentRepository.existsByCourseIdAndName(course.id, assignmentDto.assignmentName)){
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Assignment already exists")
+        }
+
         val assignment = assignmentRepository.save(Assignment(
             name = assignmentDto.assignmentName,
             description = assignmentDto.assignmentDescription,
