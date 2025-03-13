@@ -1,6 +1,9 @@
 package org.jbnu.jdevops.jcodeportallogin.dto.jcode
 
+import jakarta.validation.constraints.NotBlank
+
 data class RedirectDto (
-    val userEmail : String,
+    @field:NotBlank(message = "{redirect.userEmail.required}")
+    val userEmail: String,
     val courseId: Long
 )

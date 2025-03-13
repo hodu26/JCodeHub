@@ -39,6 +39,7 @@ out/
 ### Kotlin ###
 .kotlin
 /src/main/resources/*.properties
+!/src/main/resources/ValidationMessages*.properties
 
 ### Dev ###
 .gitmessage.txt

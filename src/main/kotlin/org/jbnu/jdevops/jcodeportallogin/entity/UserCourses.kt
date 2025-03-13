@@ -1,6 +1,7 @@
 package org.jbnu.jdevops.jcodeportallogin.entity
 
 import jakarta.persistence.*
+import jakarta.validation.constraints.NotNull
 import java.time.LocalDateTime
 
 @Entity
@@ -11,14 +12,17 @@ data class UserCourses(
 
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
     @JoinColumn(name = "course_id", nullable = false)
+    @field:NotNull(message = "{userCourses.course.required}")
     var course: Course,
 
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
+    @field:NotNull(message = "{userCourses.user.required}")
     var user: User,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @field:NotNull(message = "{userCourses.role.required}")
     var role: RoleType,
 
     @OneToMany(mappedBy = "userCourse", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)

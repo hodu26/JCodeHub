@@ -1,6 +1,7 @@
 package org.jbnu.jdevops.jcodeportallogin.entity
 
 import jakarta.persistence.*
+import jakarta.validation.constraints.NotBlank
 import java.time.LocalDateTime
 
 @Entity
@@ -10,7 +11,7 @@ data class Jcode(
     val id: Long = 0,
 
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_course_id", nullable = false)  // UserCourses 엔티티와 매핑
+    @JoinColumn(name = "user_course_id", nullable = false)
     val userCourse: UserCourses,
 
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
@@ -22,6 +23,7 @@ data class Jcode(
     val user: User,
 
     @Column(nullable = false)
+    @field:NotBlank(message = "{jcode.url.required}")
     val jcodeUrl: String,
 
     @Column(nullable = false, updatable = false)
