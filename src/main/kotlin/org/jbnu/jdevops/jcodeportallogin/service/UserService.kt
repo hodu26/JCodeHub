@@ -164,7 +164,7 @@ class UserService(
 
         return userCoursesRepository.findByUserId(user.id).map {
             val assignments = assignmentRepository.findByCourseId(it.course.id)
-            val jcode = jcodeRepository.findByUserIdAndCourseId(user.id, it.course.id)
+            val jcode = jcodeRepository.findByUserIdAndCourseIdAndSnapshot(user.id, it.course.id, false)
 
             UserCourseDetailsDto(
                 courseId = it.course.id,

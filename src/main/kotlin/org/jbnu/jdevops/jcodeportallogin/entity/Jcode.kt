@@ -26,6 +26,9 @@ data class Jcode(
     @field:NotBlank(message = "{jcode.url.required}")
     val jcodeUrl: String,
 
+    @Column(nullable = false)
+    val snapshot: Boolean = false,
+
     @Column(nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now()
 )

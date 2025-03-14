@@ -63,7 +63,7 @@ class JCodeController(
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
         }
 
-        jCodeService.deleteJCode(jcodeMainRequestDto.userEmail, courseId, token)
+        jCodeService.deleteJCode(jcodeMainRequestDto.userEmail, courseId, token, jcodeMainRequestDto.snapshot)
         return ResponseEntity.ok("JCode deleted successfully")
     }
 }

@@ -179,7 +179,7 @@ class UserController(
         val email = authentication.principal as? String
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing email in authentication")
 
-        jCodeService.deleteJCode(email, courseId, token)
+        jCodeService.deleteJCode(email, courseId, token, false)
         return ResponseEntity.ok("JCode deleted successfully")
     }
 

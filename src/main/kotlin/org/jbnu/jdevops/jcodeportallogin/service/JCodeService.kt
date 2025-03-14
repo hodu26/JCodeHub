@@ -37,7 +37,7 @@ class JCodeService(
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "UserCourse not found")
 
         // 이미 JCode가 존재하는지 확인
-        val storedJcode = jCodeRepository.findByUserIdAndCourseId(user.id, course.id)
+        val storedJcode = jCodeRepository.findByUserIdAndCourseIdAndSnapshot(user.id, course.id, snapshot)
         if (storedJcode != null) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "Jcode already exists")
         }
@@ -100,13 +100,13 @@ class JCodeService(
     }
 
     // JCode 삭제 (관리자 전용)
-    fun deleteJCode(userEmail: String, courseId: Long, token: String) {
+    fun deleteJCode(userEmail: String, courseId: Long, token: String, snapshot: Boolean) {
         val user = userRepository.findByEmail(userEmail)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
 
-        val jCode = jCodeRepository.findByUserIdAndCourseId(user.id, course.id)
+        val jCode = jCodeRepository.findByUserIdAndCourseIdAndSnapshot(user.id, course.id, snapshot)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "JCode not found for the specified user and course")
 
         val jcodeRequestBody = JCodeDeleteRequestDto (

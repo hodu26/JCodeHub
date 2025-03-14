@@ -58,7 +58,7 @@ class RedirectController(
         val encodedUUID = URLEncoder.encode(uuid, StandardCharsets.UTF_8.toString()).replace("+", "%2B")
 
         // 학생 Jcode 정보 Redis 동기화
-        val storedJcode = jCodeRepository.findByUserIdAndCourseId(user.id, course.id)
+        val storedJcode = jCodeRepository.findByUserIdAndCourseIdAndSnapshot(user.id, course.id, redirectRequest.snapshot)
         if (storedJcode != null) redisService.storeUserCourse(user.email, course.code, course.clss, storedJcode.jcodeUrl)
 
         // Node.js 서버 URL에 인코딩된 UUID 파라미터만 포함하여 구성
