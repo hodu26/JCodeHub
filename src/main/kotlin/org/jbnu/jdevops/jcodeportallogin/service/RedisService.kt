@@ -36,6 +36,12 @@ class RedisService(
         redisTemplate.opsForValue().set(key, jcodeUrl, 180, TimeUnit.DAYS) // 유효기간 6개월 (약 180일)
     }
 
+    // 이메일 & 강의코드 & 분반 → JCode URL 저장
+    fun storeSnapshotUserCourse(email: String, courseCode: String, courseClss: Int, jcodeUrl: String) {
+        val key = "user:$email:course:$courseCode:$courseClss:snapshot"
+        redisTemplate.opsForValue().set(key, jcodeUrl, 180, TimeUnit.DAYS) // 유효기간 6개월 (약 180일)
+    }
+
     // 이메일 & 강의코드 & 분반 → 저장된 JCode URL 삭제
     fun deleteUserCourse(email: String, courseCode: String, courseClss: Int) {
         val key = "user:$email:course:$courseCode:$courseClss"
@@ -107,7 +113,7 @@ class RedisService(
     }
 
     // 사용자 정보를 하나의 해시로 저장 (키: "user:profile:<UUID>")
-    fun storeUserProfile(email: String, studentNumber: String, courseCode: String, clss: String): String {
+    fun storeUserProfile(email: String, studentNumber: String, courseCode: String, clss: String, snapshot: String): String {
         // UUID 생성
         val id = UUID.randomUUID().toString()
         // 키 예시: user:profile:123e4567-e89b-12d3-a456-426614174000
@@ -117,7 +123,8 @@ class RedisService(
             "email" to email,
             "studentNumber" to studentNumber,
             "courseCode" to courseCode,
-            "clss" to clss
+            "clss" to clss,
+            "snapshot" to snapshot
         )
         // Redis 해시에 여러 필드를 한 번에 저장
         redisTemplate.opsForHash<String, String>().putAll(key, userInfo)

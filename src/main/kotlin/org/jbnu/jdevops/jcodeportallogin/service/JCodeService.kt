@@ -48,17 +48,20 @@ class JCodeService(
         }
 
         // snapshot 권한 확인 (targetUserId를 0으로 둬서 자기 자신의 스냅샷도 열람 못하게 설정)
+        var deployment_name = "jcode-${course.code.lowercase()}-${course.clss}-${user.studentNum}"
         var file_path = "workspace/${course.code.lowercase()}-${course.clss}-${user.studentNum}"
         if (snapshot) {
             AuthorizationUtil.validateUserAuthority(user.role, user.id, 0, course.id, userCoursesRepository)
+            deployment_name = "jcode-snapshot-${course.code.lowercase()}-${user.studentNum}"
             file_path = "${course.code.lowercase()}-${course.clss}"
         }
+        val app_label = deployment_name
 
         val jcodeRequestBody = JCodeRequestDto (
             namespace = "jcode-${course.code.lowercase()}-${course.clss}",
-            deployment_name = "jcode-${course.code.lowercase()}-${course.clss}-${user.studentNum}",
-            service_name = "jcode-${course.code.lowercase()}-${course.clss}-${user.studentNum}-svc",
-            app_label = "jcode-${course.code.lowercase()}-${course.clss}-${user.studentNum}",
+            deployment_name = deployment_name,
+            service_name = deployment_name + "-svc",
+            app_label = app_label,
             file_path = file_path,
             student_num = user.studentNum.toString(),
             use_vnc = course.vnc,
@@ -89,7 +92,8 @@ class JCodeService(
                 jcodeUrl = externalJcodeDto.jcodeUrl,
                 course = course,
                 user = user,
-                userCourse = userCourse
+                userCourse = userCourse,
+                snapshot = snapshot,
             )
         )
 

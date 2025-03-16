@@ -54,12 +54,15 @@ class RedirectController(
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
 
         // 사용자 프로필 정보를 Redis에 저장하고 UUID를 획득 & UUID를 UTF-8로 URL 인코딩
-        val uuid = redisService.storeUserProfile(user.email, user.studentNum.toString(), course.code, course.clss.toString())
+        val uuid = redisService.storeUserProfile(user.email, user.studentNum.toString(), course.code, course.clss.toString(), redirectRequest.snapshot.toString())
         val encodedUUID = URLEncoder.encode(uuid, StandardCharsets.UTF_8.toString()).replace("+", "%2B")
 
         // 학생 Jcode 정보 Redis 동기화
         val storedJcode = jCodeRepository.findByUserIdAndCourseIdAndSnapshot(user.id, course.id, redirectRequest.snapshot)
-        if (storedJcode != null) redisService.storeUserCourse(user.email, course.code, course.clss, storedJcode.jcodeUrl)
+        if (storedJcode != null) {
+            if (redirectRequest.snapshot) redisService.storeSnapshotUserCourse(user.email, course.code, course.clss, storedJcode.jcodeUrl)
+            else redisService.storeUserCourse(user.email, course.code, course.clss, storedJcode.jcodeUrl)
+        }
 
         // Node.js 서버 URL에 인코딩된 UUID 파라미터만 포함하여 구성
         val finalNodeJsUrl = "$routerUrl?id=$encodedUUID&folder=/home/coder/project"
