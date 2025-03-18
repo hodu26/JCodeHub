@@ -15,7 +15,6 @@ docker-compose.yaml
 
 # properties prod 외에 전부 제외
 /src/main/resources/*.properties
-!src/main/resources/application-prod.properties
 
 # IDE 관련 파일 및 설정 (예: IntelliJ IDEA)
 .idea

@@ -13,6 +13,7 @@ import org.jbnu.jdevops.jcodeportallogin.util.RefreshTokenUtil
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 
 @Service
@@ -25,6 +26,7 @@ class AuthService(
     private val jwtUtil: JwtUtil
 ) {
 
+    @Transactional(readOnly = true)
     fun basicLogin(loginUserDto: LoginUserDto): Map<String, String> {
         val user = userRepository.findByEmail(loginUserDto.email)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")

@@ -27,6 +27,7 @@ class CourseService(
     private val userRepository: UserRepository
 ) {
     // 강의별 유저 조회
+    @Transactional(readOnly = true)
     fun getUsersByCourse(email: String, courseId: Long): List<UserInfoDto> {
         // 강의가 존재하는지 먼저 확인
         val userCourses = userCoursesRepository.findByCourseId(courseId)
@@ -60,6 +61,7 @@ class CourseService(
     }
 
     // 강의별 과제 조회
+    @Transactional(readOnly = true)
     fun getAssignmentsByCourse(courseId: Long): List<AssignmentDto> {
         val assignments = assignmentRepository.findByCourseId(courseId)
 
@@ -81,6 +83,7 @@ class CourseService(
     }
 
     // 강의 key 재발급
+    @Transactional
     fun reissueCourseKey(courseId: Long): String {
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
@@ -97,6 +100,7 @@ class CourseService(
     }
 
     // 강의 추가
+    @Transactional
     fun createCourse(courseDto: CourseDto): CourseDto {
         // 랜덤 key를 생성하여 할당
         val rawKey = courseKeyUtil.generateCourseEnrollmentCode(courseDto.code, courseDto.clss)
@@ -127,6 +131,7 @@ class CourseService(
     }
 
     // 강의 수정
+    @Transactional
     fun updateCourse(courseId: Long, courseDto: CourseDto): CourseDto {
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
@@ -153,6 +158,7 @@ class CourseService(
         courseRepository.delete(course)
     }
 
+    // 전체 강의 조회
     @Transactional(readOnly = true)
     fun getAllCourses(): List<CourseDto> {
         return courseRepository.findAll()
@@ -171,10 +177,11 @@ class CourseService(
     }
 
     // 관리자용 강의 상세 정보 조회
+    @Transactional(readOnly = true)
     fun getCourseDetails(courseId: Long): UserCourseDetailsDto {
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
-            
+
         val assignments = assignmentRepository.findByCourseId(courseId)
             .map { assignment ->
                 AssignmentDto(
@@ -187,7 +194,7 @@ class CourseService(
                     updatedAt = assignment.updatedAt.toString()
                 )
             }
-            
+
         return UserCourseDetailsDto(
             courseId = course.id,
             courseName = course.name,

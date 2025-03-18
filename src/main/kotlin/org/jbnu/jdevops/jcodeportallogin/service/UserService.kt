@@ -77,6 +77,7 @@ class UserService(
     }
 
     // 내 정보 수정: 이름은 수정 가능하며, 학생번호는 아직 설정되지 않은 경우에만 수정할 수 있음
+    @Transactional
     fun updateUserInfo(email: String, updateDto: UserProfileUpdateDto): Map<String, String> {
         val user = userRepository.findByEmail(email)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
@@ -145,6 +146,7 @@ class UserService(
     }
 
     // 유저별 JCode 정보 조회
+    @Transactional(readOnly = true)
     fun getUserJcodes(email: String): List<JCodeDto> {
         val user = userRepository.findByEmail(email)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with email: $email")
@@ -158,6 +160,7 @@ class UserService(
     }
 
     // 유저별 참가 강의의 과제 및 JCode 정보 조회
+    @Transactional(readOnly = true)
     fun getUserCoursesWithDetails(email: String): List<UserCourseDetailsDto> {
         val user = userRepository.findByEmail(email)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with email: $email")
@@ -191,6 +194,7 @@ class UserService(
     }
 
     // 유저 강의 가입
+    @Transactional
     fun joinCourse(email: String, courseKey: String): Long {
         // 입력된 courseKey가 "code-clss-randomPart" 형식인지 확인하고, code와 clss 추출
         val parts = courseKey.split("-")
@@ -246,6 +250,7 @@ class UserService(
     }
 
     // 유저 강의 탈퇴 (연관된 정보 삭제)
+    @Transactional
     fun leaveCourse(courseId: Long, email: String): Long {
         val user = userRepository.findByEmail(email)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
@@ -274,6 +279,7 @@ class UserService(
 
     ///////////////////   관리자용   //////////////////////////
 
+    // 전체 유저 조회
     @Transactional(readOnly = true)
     fun getAllUsers(): List<UserInfoDto> {
         return userRepository.findAll().map { user ->
@@ -287,6 +293,7 @@ class UserService(
         }
     }
 
+    // 특정 유저 조회
     @Transactional(readOnly = true)
     fun getUserById(userId: Long): UserDto? {
         val user = userRepository.findById(userId)
@@ -294,6 +301,7 @@ class UserService(
         return user.toDto()
     }
 
+    // 유저 역할 업데이트
     @Transactional
     fun updateUserRole(email: String, userId: Long, newRole: RoleType, courseId: Long?) {
         val currentUser = userRepository.findByEmail(email)
@@ -366,6 +374,7 @@ class UserService(
         }
     }
 
+    // 유저 삭제
     @Transactional
     fun deleteUser(userId: Long) {
         val user = userRepository.findById(userId)
@@ -374,6 +383,7 @@ class UserService(
     }
 
     // 유저 강의 탈퇴 (연관된 정보 삭제)
+    @Transactional
     fun chaseOutCourse(userId: Long, courseId: Long, email: String): Long {
         val currentUser = userRepository.findByEmail(email)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "You're Info not found")
