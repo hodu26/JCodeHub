@@ -1,5 +1,6 @@
 package org.jbnu.jdevops.jcodeportallogin.config
 
+import RoutingDataSource
 import com.zaxxer.hikari.HikariDataSource
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
@@ -31,18 +32,21 @@ class DataSourceConfig {
             .type(HikariDataSource::class.java)
             .build()
     }
-//
+
     @Bean
     fun routingDataSource(): DataSource {
-        val routingDataSource = RoutingDataSource()
+        val master = masterDataSource()
+        val replica = replicaDataSource()
+
+        // replica DataSource를 생성자 파라미터로 전달하여, 장애 시 fallback 로직을 사용할 수 있게 함.
+        val routingDataSource = RoutingDataSource(replica)
         val dataSourceMap = HashMap<Any, Any>()
-        dataSourceMap[DataSourceKey.MASTER] = masterDataSource()
-        dataSourceMap[DataSourceKey.REPLICA] = replicaDataSource()
+        dataSourceMap[DataSourceKey.MASTER] = master
+        dataSourceMap[DataSourceKey.REPLICA] = replica
 
         routingDataSource.setTargetDataSources(dataSourceMap)
         // 기본 데이터 소스는 master로 설정
-        routingDataSource.setDefaultTargetDataSource(masterDataSource())
-        // targetDataSources가 확실히 설정되도록 초기화 호출
+        routingDataSource.setDefaultTargetDataSource(master)
         routingDataSource.afterPropertiesSet()
 
         return routingDataSource

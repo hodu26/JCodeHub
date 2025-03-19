@@ -15,6 +15,8 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.scheduling.annotation.Async
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class JCodeService(
@@ -26,6 +28,10 @@ class JCodeService(
     private val userCoursesRepository: UserCoursesRepository
 ) {
     // JCode 생성
+    // transactional을 통해 master db에서 작업하도록 명시
+    // 하지만 trasaction 처리가 오래걸려 성능 저하를 유발 할 수 있어 비동기적으로 처리
+    @Async
+    @Transactional
     fun createJCode(courseId: Long, userEmail: String, email: String, token: String, snapshot: Boolean): JCodeDto {
         val course = courseRepository.findById(courseId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found") }
@@ -104,6 +110,10 @@ class JCodeService(
     }
 
     // JCode 삭제 (관리자 전용)
+    // transactional을 통해 master db에서 작업하도록 명시
+    // 하지만 trasaction 처리가 오래걸려 성능 저하를 유발 할 수 있어 비동기적으로 처리
+    @Async
+    @Transactional
     fun deleteJCode(userEmail: String, courseId: Long, token: String, snapshot: Boolean) {
         val user = userRepository.findByEmail(userEmail)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
