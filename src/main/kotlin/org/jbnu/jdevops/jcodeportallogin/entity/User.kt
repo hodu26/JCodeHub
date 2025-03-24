@@ -20,7 +20,7 @@ data class User(
     @Column(nullable = true)
     var name: String? = null, // 이름 필드 (optional)
 
-    @Column(nullable = true)
+    @Column(nullable = true, unique = true)
     var studentNum: Int? = null,  // 처음엔 null 허용, 업데이트는 메서드로 제어
 
     @Enumerated(EnumType.STRING)
