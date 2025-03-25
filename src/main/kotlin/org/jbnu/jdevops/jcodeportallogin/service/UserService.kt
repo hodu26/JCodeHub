@@ -350,7 +350,7 @@ class UserService(
             userCoursesRepository.save(userCourse)
 
             // 대상 유저의 역할 업데이트 후 저장 (ASSISTANT는 하나라도 ASSISTANT를 가지고 있을 시 업데이트 X)
-            if (!(newRole != RoleType.STUDENT && userCoursesRepository.findByUserEmailAndRole(targetUser.email, targetUser.role).isNotEmpty())) {
+            if (newRole != RoleType.STUDENT || userCoursesRepository.findByUserEmailAndRole(targetUser.email, targetUser.role).isEmpty()) {
                 targetUser.role = newRole
                 userRepository.save(targetUser)
             }

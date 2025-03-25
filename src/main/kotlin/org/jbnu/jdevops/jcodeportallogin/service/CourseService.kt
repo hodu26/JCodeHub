@@ -40,13 +40,14 @@ class CourseService(
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Current user not found")
 
         // 만약 현재 사용자가 ASSISTANT라면 ASSISTANT 역할인 강의만 필터링
-        val filteredUserCourses = if (currentUser.role == RoleType.ASSISTANT) {
-            userCoursesRepository.findByCourseIdAndRole(courseId, RoleType.ASSISTANT)
-        } else {
-            userCourses
+        if (currentUser.role == RoleType.ASSISTANT) {
+            val isAssistantInCourse = userCoursesRepository.existsByCourseIdAndUserIdAndRole(courseId, currentUser.id, RoleType.ASSISTANT)
+            if (!isAssistantInCourse) {
+                return emptyList()
+            }
         }
 
-       return filteredUserCourses.map {
+       return userCourses.map {
            val user = it.user
            val role = it.role
            UserInfoDto(
