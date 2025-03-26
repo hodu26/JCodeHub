@@ -84,15 +84,15 @@ class WatcherAssignmentService(
             // 유저의 role에 따라 반환 데이터를 달리 가공
             when (user.role) {
                 RoleType.STUDENT -> {
-                    val totalStudents = userCoursesRepository.countUserCoursesByCourseId(courseId)
-                    modifyGraphDataForStudent(graphData, user.studentNum, totalStudents)
+                    val totalStudents = userCoursesRepository.countUserCoursesByCourseIdAndRole(courseId, RoleType.STUDENT)
+                    modifyGraphDataForStudent(graphData, user.studentNum, totalStudents, courseId)
                 }
                 RoleType.ASSISTANT -> {
                     // 해당 강의에서의 조교 권한 확인
                     val userCourse = userCoursesRepository.findByUserIdAndCourseId(user.id, courseId)
-                    val totalStudents = userCoursesRepository.countUserCoursesByCourseId(courseId)
+                    val totalStudents = userCoursesRepository.countUserCoursesByCourseIdAndRole(courseId, RoleType.STUDENT)
                     if (userCourse?.role == RoleType.STUDENT) {
-                        modifyGraphDataForStudent(graphData, user.studentNum, totalStudents)
+                        modifyGraphDataForStudent(graphData, user.studentNum, totalStudents, courseId)
                     } else {
                         graphData
                     }
@@ -108,15 +108,26 @@ class WatcherAssignmentService(
     }
 
     // 학생용 그래프 데이터는 자신의 학번을 제외한 다른 학생의 학번 확인 불가능하도록 변경
-    private fun modifyGraphDataForStudent(data: AssingmentTotalGraphListData?, myStudentNum: Int?, totalStudents: Int): AssingmentTotalGraphListData {
+    private fun modifyGraphDataForStudent(data: AssingmentTotalGraphListData?, myStudentNum: Int?, totalStudents: Int, courseId: Long): AssingmentTotalGraphListData {
+        var myDataUsed: Boolean = false
+        if (myStudentNum == null) myDataUsed = true
+
         // 기존 데이터 항목을 순차적인 번호로 변환
-        val initialList = data?.results?.mapIndexed { index, graph ->
-            if (graph.student_num == myStudentNum) {
-                // 자신의 데이터는 실제 학번 유지
-                AssingmentTotalGraphData(student_num = graph.student_num, size_change = graph.size_change)
+        val initialList = data?.results?.mapIndexedNotNull { index, graph ->
+            val usercourse = userCoursesRepository.findByUserStudentNumAndCourseId(graph.student_num, courseId)
+
+            if (usercourse != null && usercourse.role == RoleType.STUDENT) {
+                if (!myDataUsed && graph.student_num == myStudentNum) {
+                    // 자신의 데이터는 실제 학번 유지
+                    myDataUsed = true
+                    AssingmentTotalGraphData(student_num = graph.student_num, size_change = graph.size_change)
+                } else {
+                    // 다른 학생의 경우, 실제 학번 대신 순차적으로 번호 부여
+                    AssingmentTotalGraphData(student_num = index + 1, size_change = graph.size_change)
+                }
             } else {
-                // 다른 학생의 경우, 실제 학번 대신 순차적으로 번호 부여
-                AssingmentTotalGraphData(student_num = index + 1, size_change = graph.size_change)
+                // 탈퇴한 학생의 경우, null 반환하여 리스트에서 제외
+                null
             }
         } ?: emptyList()
 
@@ -126,7 +137,12 @@ class WatcherAssignmentService(
         if (currentCount < totalStudents) {
             for (index in currentCount until totalStudents) {
                 // 데이터가 없는 학생에 대해 순차적인 번호 부여 및 size_change 0 설정
-                mutableList.add(AssingmentTotalGraphData(student_num = index + 1, size_change = 0L))
+                if (!myDataUsed) {
+                    myDataUsed = true
+                    mutableList.add(AssingmentTotalGraphData(student_num = myStudentNum?: (index+1), size_change = 0L))
+                } else {
+                    mutableList.add(AssingmentTotalGraphData(student_num = index + 1, size_change = 0L))
+                }
             }
         }
         return AssingmentTotalGraphListData(mutableList)

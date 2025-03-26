@@ -12,6 +12,7 @@ interface UserCoursesRepository : JpaRepository<UserCourses, Int> {
     fun existsByUserIdAndCourseId(userId: Long, courseId: Long): Boolean
     fun findByUserIdAndCourseCode(userId: Long, courseCode: String): UserCourses?
     fun findByUserEmailAndRole(email: String, role: RoleType): List<UserCourses>
-    fun countUserCoursesByCourseId(courseId: Long): Int
+    fun countUserCoursesByCourseIdAndRole(courseId: Long, role: RoleType): Int
     fun existsByCourseIdAndUserIdAndRole(courseId: Long, userId: Long, role: RoleType): Boolean
+    fun findByUserStudentNumAndCourseId(studentNum: Int, courseId: Long): UserCourses?
 }
