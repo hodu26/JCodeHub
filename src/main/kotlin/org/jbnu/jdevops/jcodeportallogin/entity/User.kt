@@ -1,6 +1,7 @@
 package org.jbnu.jdevops.jcodeportallogin.entity
 
 import jakarta.persistence.*
+import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import org.jbnu.jdevops.jcodeportallogin.dto.user.UserDto
@@ -21,6 +22,7 @@ data class User(
     var name: String? = null, // 이름 필드 (optional)
 
     @Column(nullable = true, unique = true)
+    @field:Min(value = 0, message = "{user.studentNum.min}")
     var studentNum: Int? = null,  // 처음엔 null 허용, 업데이트는 메서드로 제어
 
     @Enumerated(EnumType.STRING)
