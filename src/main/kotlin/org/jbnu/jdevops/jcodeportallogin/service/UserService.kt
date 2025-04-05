@@ -10,6 +10,7 @@ import org.jbnu.jdevops.jcodeportallogin.dto.usercourse.UserCourseDetailsDto
 import org.jbnu.jdevops.jcodeportallogin.dto.usercourse.UserCoursesDto
 import org.jbnu.jdevops.jcodeportallogin.entity.*
 import org.jbnu.jdevops.jcodeportallogin.repo.*
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -234,7 +235,11 @@ class UserService(
             course = course,
             role = role
         )
-        userCoursesRepository.save(userCourse)
+        try { // 여러 요청이 동시에 들어와 db unique 제약조건을 위반했을 시 처리
+            userCoursesRepository.save(userCourse)
+        } catch (ex: DataIntegrityViolationException) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "User already enrolled in this course")
+        }
         
         // 교수는 강의 관리자에 추가
         if (role == RoleType.PROFESSOR) {

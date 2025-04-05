@@ -5,7 +5,12 @@ import jakarta.validation.constraints.NotNull
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "user_courses")
+@Table(
+    name = "user_courses",
+    uniqueConstraints = [  // coure_id, user_id 쌍 unique 제약조건 설정
+        UniqueConstraint(columnNames = ["course_id", "user_id"])
+    ]
+)
 data class UserCourses(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
