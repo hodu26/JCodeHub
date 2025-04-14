@@ -46,3 +46,4 @@ out/
 
 ### CICD ###
 jcode-backend.tar*
+jcode-backend-test.tar*
