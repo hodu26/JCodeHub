@@ -16,6 +16,18 @@
 
 ---
 
+## 🔧 기술 스택
+![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=flat-square&logo=kubernetes&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/SpringBoot-6DB33F?style=flat-square&logo=springboot&logoColor=white)
+![Kotlin](https://img.shields.io/badge/Kotlin-0095D5?style=flat-square&logo=kotlin&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-43853D?style=flat-square&logo=node.js&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)
+![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=flat-square&logo=mariadb&logoColor=white)
+![MSA](https://img.shields.io/badge/MSA-Microservices-7D7D7D?style=flat-square)
+
+---
+
 
 ## 🎯 전체 역할 분담
 
@@ -59,7 +71,7 @@
 ![Proxy Sequence Diagram](https://github.com/user-attachments/assets/615a57c6-6064-4db6-ab1c-09380b57c3ec)
 
 
-## 데이터 흐름
+## 🔀 데이터 흐름
 1. 클라이언트 → Backend 로그인 요청
 2. Backend ↔ Redis → 토큰/세션 발급
 3. Generator에 컨테이너 생성 명령 → Kubernetes 스케줄링
@@ -71,7 +83,7 @@
 ---
 
 
-## 🔄 WebIDE(VNC) Demo
+## 🎬 WebIDE(VNC) Demo
 
 ![demo](https://github.com/user-attachments/assets/a200b3c8-9cb2-47ff-a1c3-d567eb49120a)
 
@@ -90,6 +102,9 @@
 
 
 ## 📊 Performance
+
+**[실험환경]** K8s Cluster : Kubernetes v1.32, 3 master + 6 worker 클러스터
+
 
 | 구성 요소           | 지표                  | 결과             |
 |---------------------|-----------------------|------------------|
@@ -125,7 +140,7 @@
 1. **Proxy 서버 인증 강화**
    - 문제: 프록시 서버에서 WebIDE로 프록시 할 시 초기 인증 이후 웹소켓은 권한검증을 추가로 하고 있지 않은 것을 확인
    - 해결: 웹소켓 포함 모든 트래픽 권한 검증 추가 
-3. **WebIDE 새로고침 시 강의 꼬임**
+2. **WebIDE 새로고침 시 강의 꼬임**
    - 문제: UUID를 파라미터로만 넘길 시, 초기 검증 이후 웹소켓 및 정적 파일에서 권한 검증 불가
            UUID를 쿠키로만 넘길 시, 2개 이상의 WebIDE(VNC) 동시 사용 시 웹소켓 및 정적 파일의 경로가 꼬여 오류 발생
    - 해결: UUID를 파라미터 + 쿠키 동시 전송, 새로고침 시 쿠키 동기화로 문제 해결  
