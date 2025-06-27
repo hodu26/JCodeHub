@@ -96,6 +96,12 @@
 
 ---
 
+## 💠 ERD
+![JCode-ERD](https://github.com/user-attachments/assets/6e276079-cb31-4a37-9225-84329cd693d9)
+
+
+---
+
 
 ## 🎬 WebIDE(VNC) Demo
 
