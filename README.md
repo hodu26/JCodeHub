@@ -5,6 +5,8 @@
 
 > **이 프로젝트**는 Kubernetes on OpenStack 프로젝트의 연장선입니다.
 
+ 이 프로젝트는 학생들이 IP:Port로 직접 WebIDE에 접근하고, 컨테이너 생성·삭제를 수동 요청해야 하는 불편함이 있어 이를 해결하는 동시에 학생들의 데이터를 분석하기 위해 기획되었습니다.
+
 ■ **전체 프로젝트**  
 - 교육용 WebIDE 제공을 통해 교수자·학생 누구나 어디서든 웹으로 접근 가능  
 - 교수자는 각 학생의 과제 수행도를 실시간 대시보드 및 그래프 분석으로 확인  
@@ -47,57 +49,14 @@
 ## 🏗 아키텍처
 ![JCode Backend Architecture](https://github.com/user-attachments/assets/e605df24-a650-42f5-bc83-2ba28280aadc)
 
-- WebIDE 컨테이너는 MS의 CodeServer(`coder/code-server`) 이미지를 활용·커스터마이징
+> WebIDE 컨테이너는 MS의 CodeServer(`coder/code-server`) 이미지를 활용·커스터마이징
 
-
-
-
-
-## 🚀 마이크로서비스 구성
-
-- **Backend**  
-  사용자 인증·인가, 강의·사용자 정보 DB 관리, 마이크로서비스 간 통신 보안 처리  
-- **Container Generator**  
-  Kubernetes API에 직접 YAML 전송 → WebIDE 컨테이너 동적 생성·삭제  
-- **Proxy Server**  
-  Redis 연계 이중 인증 프록시 → WebSocket·VNC·파일 트래픽 재검증, 부하 분산  
-- **Namespace Management**  
-  강의별 네임스페이스 생성·삭제, 네트워크 정책·HPA 설정으로 자원·트래픽 관리
-
-## ⚙️ 세부 구성
-
-- **스토리지**  
-  - **K8s Longhorn 활용**  
-    - 하나의 **RWX(ReadWriteMany) 볼륨** 프로비저닝  
-      - 학생 컨테이너 실행 시 PV 마운트 → 자동으로 학생별 폴더 생성 및 중앙관리  
-      - 개인 IDE 설정은 **별도 볼륨**에 분리 저장 → 여러 강의 간에도 사용자 설정 공유  
-
-- **Redis**  
-  - 사용자 정보(세션 UUID 등) 전달용 캐시  
-  - Spring Session 관리 및 JWT 토큰 블랙리스트 운영  
-
-
----
-
-
-## 🔄 Sequence Diagram
-
-![Proxy Sequence Diagram](https://github.com/user-attachments/assets/615a57c6-6064-4db6-ab1c-09380b57c3ec)
-
-
-## 🔀 데이터 흐름
-1. 클라이언트 → Backend 로그인 요청
-2. Backend ↔ Redis → 토큰/세션 발급
-3. Generator에 컨테이너 생성 명령 → Kubernetes 스케줄링
-4. 생성된 Pod의 엔드포인트를 Proxy로 라우팅
-5. Proxy가 트래픽 재검증 후 WebIDE(VPN) 서비스 제공
-6. 이후 사용자는 외부에서 Proxy를 경유하여 WebIDE(VPN) 접근
-
-
----
-
-## 💠 ERD
-![JCode-ERD](https://github.com/user-attachments/assets/6e276079-cb31-4a37-9225-84329cd693d9)
+- **Backend :** 인증·DB·API 게이트웨이
+- **Container Generator :** Kubernetes API → 컨테이너 동적 생성·삭제
+- **Proxy Server :** Redis 연계 프록시 → WebSocket·VNC 트래픽 재검증, 부하 분산
+- **Namespace Management :** 강의별 네임스페이스,네트워크 정책·HPA 설정으로 자원·트래픽 관리
+- **스토리지(PV) :** RWX 볼륨 프로비저닝(Longhorn), 컨테이너 데이터 중앙 관리
+- **Redis :** 사용자 정보 전달용 캐시, Spring Session 관리, JWT 토큰 블랙리스트 운영
 
 
 ---
@@ -106,6 +65,7 @@
 ## 🎬 WebIDE(VNC) Demo
 
 ![demo](https://github.com/user-attachments/assets/a200b3c8-9cb2-47ff-a1c3-d567eb49120a)
+> _2025.03 ~ 현재 진행 중_
 
 
 ---
@@ -116,54 +76,6 @@
 ✔ **YAML 직접 전송 프로비저닝** → 컨테이너 배포 지연 최소화  
 ✔ **강의별 네임스페이스 분리** → 격리성과 관리 효율성 동시 확보 (HPA·네트워크 정책)  
 ✔ **Redis 연계 이중 인증 프록시** → 초기 인증 후 세션 재검증으로 부하 분산·안정적 인증  
-
-
-
-
-
-## 📊 Performance
-
-**[실험환경]** K8s Cluster : Kubernetes v1.32, 3 master + 6 worker 클러스터
-
-
-| 구성 요소           | 지표                  | 결과             |
-|---------------------|-----------------------|------------------|
-| • Container Generator | 평균 배포 시간        | 7.40 ± 0.34 초  |
-|                     | 평균 삭제 시간        | 2.70 ± 0.22 초  |
-| • Proxy Server        | 평균 CPU 사용률       | 0.67%           |
-|                     | 메모리 사용량         | 70 MiB – 90 MiB |
-|                     | Event Loop Lag        | < 10 ms         |
-| • Backend             | JVM Heap 사용률      | 3.70%           |
-|                     | CPU 사용률           | 0.13%           |
-|                     | Load Average          | 약 2.12         |
-| • 실서비스 적용 기간  | 배포 지연·인증 실패  | 거의 없음       |
-
-> _2025.03 ~ 현재 진행 중_
-
-
----
-
-
-## ⚔ 주요 쟁점 및 해결
-
-1. **Keycloak 토큰 직접 사용 vs 자체 JWT 발급**  
-   - MSA 서비스 구축 시 각 서비스에서 Keycloak 토큰 공유·만료 확인 부담 → 자체 JWT 발급 방식 채택  
-2. **Keycloak 연계 위치 논의**  
-   - Keycloak과 프론트 vs 백엔드 연계 → 인증·인가 일원화 위해 메인 백엔드 연동으로 합의  
-
-
-
-
-
-## 🛠 Troubleshooting
-
-1. **Proxy 서버 인증 강화**
-   - 문제: 프록시 서버에서 WebIDE로 프록시 할 시 초기 인증 이후 웹소켓은 권한검증을 추가로 하고 있지 않은 것을 확인
-   - 해결: 웹소켓 포함 모든 트래픽 권한 검증 추가 
-2. **WebIDE 새로고침 시 강의 꼬임**
-   - 문제: UUID를 파라미터로만 넘길 시, 초기 검증 이후 웹소켓 및 정적 파일에서 권한 검증 불가
-           UUID를 쿠키로만 넘길 시, 2개 이상의 WebIDE(VNC) 동시 사용 시 웹소켓 및 정적 파일의 경로가 꼬여 오류 발생
-   - 해결: UUID를 파라미터 + 쿠키 동시 전송, 새로고침 시 쿠키 동기화로 문제 해결  
 
 
 ---
