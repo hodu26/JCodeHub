@@ -2,8 +2,9 @@
 .git
 .gitignore
 
-# docker compose 관련 파일 제외
+# docker compose, k8s 관련 파일 제외
 docker-compose.yaml
+/k8s/
 
 # Gradle 캐시 및 빌드 산출물 제외
 .gradle

@@ -43,6 +43,7 @@ out/
 
 ### Dev ###
 .gitmessage.txt
+/k8s/jcode-val.yaml
 
 ### CICD ###
 jcode-backend.tar*

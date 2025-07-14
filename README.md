@@ -61,6 +61,99 @@
 
 ---
 
+## 🚀 실행/배포 가이드
+
+### 1. 환경 변수 및 설정 파일
+
+프로젝트는 Spring Boot의 `application.properties` 기반으로 환경을 설정합니다. 실제 배포/개발 환경에서는 `src/main/resources/application-example.properties` 파일을 참고하여, 민감 정보는 직접 복사해 `application.properties`로 사용하거나 환경 변수로 주입하세요. **절대 민감 정보가 깃허브에 올라가지 않도록 주의!**
+
+> **Tip:** 운영/개발 환경에서는 반드시 `application-example.properties`를 복사해 사용하거나, 환경 변수로 오버라이드하세요.
+
+--
+
+
+### 2. 실행 방법
+
+#### (1) 로컬 개발
+
+1. **환경 변수 파일 준비**
+   - `src/main/resources/application-example.properties`를 복사해 `application.properties`로 사용하거나, 환경 변수로 직접 지정
+2. **의존 서비스 실행**  (MariaDB, Redis 등은 docker-compose로 띄우는 것을 권장)
+   ```bash
+   docker-compose up -d
+   ```
+3. **프로젝트 빌드 및 실행**
+   ```bash
+   ./gradlew build
+   ./gradlew bootRun
+   ```
+
+#### (2) Docker로 실행
+
+1. **이미지 빌드**
+   ```bash
+   docker build -t jcode-backend:test .
+   ```
+2. **컨테이너 실행**
+   ```bash
+   docker run -d --name jcode-backend \
+     -p 8080:8080 \
+     -v $(pwd)/src/main/resources/application.properties:/app/application.properties \
+     jcode-backend:test
+   ```
+   - 또는 `docker-compose.yaml` 사용
+
+#### (3) Kubernetes로 배포
+
+1. **ConfigMap/Secret 생성**  
+   - `k8s/jcode-val-ex.yaml` 파일을 참고해 ConfigMap/Secret을 생성 (민감 정보는 Secret에만!)
+   - 예시:
+     ```bash
+     kubectl apply -f k8s/jcode-val-ex.yaml
+     ```
+2. **Backend 배포**
+   - `k8s/jcode-backend.yaml`로 배포
+     ```bash
+     kubectl apply -f k8s/jcode-backend.yaml
+     ```
+3. **HPA(오토스케일러) 적용 (선택)**
+   - 부하 분산이 필요할 경우 `k8s/jcode-backend-hpa.yaml` 적용
+     ```bash
+     kubectl apply -f k8s/jcode-backend-hpa.yaml
+     ```
+
+> **순서:** `jcode-val-ex.yaml` → `jcode-backend.yaml` → (옵션) `jcode-backend-hpa.yaml`
+
+--
+
+### 3. 부속 유틸리티 안내 (`util/secret/`)
+
+#### (1) `generateSecureSecret.kt`
+- **용도:**  JWT 등 보안용 시크릿을 안전하게 생성하는 유틸리티입니다.
+- **사용법:**
+  ```bash
+  ./gradlew run -PmainClass=org.jbnu.jdevops.jcodeportallogin.util.secret.generateSecureSecretKt
+  ```
+  또는 IDE에서 main 함수 실행
+  → 32바이트(256비트) 랜덤 시크릿 문자열이 출력됨
+  → JWT/Keycloak 등 시크릿 값으로 활용
+
+#### (2) `RedisSessionParserApplication.kt`
+- **용도:**  Redis에 저장된 세션 정보를 파싱/분석하는 도구입니다.
+- **사용법:**  별도 실행하여 Redis 세션 데이터 구조를 확인하거나, 세션 관련 문제 디버깅 시 활용
+
+> **참고:** 이 두 파일은 서비스 필수 구성요소는 아니며, 운영/개발 편의를 위한 부속 스크립트입니다.
+
+--
+
+### 4. 기타 참고
+
+- **Swagger UI:**  `/index.html` 또는 `/swagger-ui.html`에서 API 문서 확인 가능
+- **로그:**  `/logs` 디렉토리에 로그 파일 저장(설정에 따라 다름)
+- **DB/Redis 등 외부 서비스는 별도 준비 필요**
+
+---
+
 
 ## 🎬 WebIDE(VNC) Demo
 

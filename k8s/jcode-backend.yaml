@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jcode-backend
+  namespace: watcher
+  labels:
+    app: jcode-backend
+spec:
+  selector:
+    matchLabels:
+      app: jcode-backend
+  template:
+    metadata:
+      labels:
+        app: jcode-backend
+    spec:
+      containers:
+      - name: jcode-backend
+        image: jcode-backend:test
+        imagePullPolicy: IfNotPresent # local image 사용
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+        envFrom:
+        - configMapRef:
+            name: jcode-backend-config
+        - secretRef:
+            name: jcode-backend-secret
+        resources:
+          requests:
+            cpu: "1"
+            memory: 1.5Gi
+          limits:
+            memory: 10Gi
+        volumeMounts:
+        - name: jcode-backend-tmp
+          mountPath: /tmp
+        - name: jcode-backend-logs
+          mountPath: /logs
+      volumes:
+      - name: jcode-backend-tmp
+        emptyDir: {}
+      - name: jcode-backend-logs
+        persistentVolumeClaim:
+          claimName: jcode-backend-logs-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jcode-backend
+  namespace: watcher
+  labels:
+    app: jcode-backend
+spec:
+  selector:
+    app: jcode-backend
+  ports:
+  - name: http-metrics
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jcode-backend-logs-pvc
+  namespace: watcher
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: jcode-backend-monitor
+  namespace: watcher
+  labels:
+    app: jcode-backend
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: jcode-backend
+  namespaceSelector:
+    matchNames:
+      - watcher
+  endpoints:
+    - port: http-metrics
+      path: /actuator/prometheus  # Spring Actuator가 노출하는 엔드포인트
+      interval: 30s
+
