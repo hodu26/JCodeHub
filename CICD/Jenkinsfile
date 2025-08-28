@@ -1,0 +1,209 @@
+pipeline {
+    agent {
+        kubernetes {
+            yaml """
+            apiVersion: v1
+            kind: Pod
+            spec:
+              securityContext:
+                fsGroup: 1000
+              containers:
+              # Kaniko 컨테이너 설정 (Docker 대신 사용)
+              - name: kaniko
+                image: gcr.io/kaniko-project/executor:debug
+                command:
+                - /busybox/sh
+                - -c
+                args:
+                - /busybox/cat
+                tty: true
+                volumeMounts:
+                - name: kaniko-config
+                  mountPath: /kaniko/.docker
+              # SonarQube 스캐너 컨테이너 설정
+              - name: sonar-scanner
+                image: sonarsource/sonar-scanner-cli:latest
+                command:
+                - cat
+                tty: true
+              # Git + HTTPS 인증 (.netrc 이용)
+              - name: git
+                image: alpine/git:latest
+                command:
+                - cat
+                tty: true
+                securityContext:
+                  runAsUser: 1000        # jnlp(jenkins)와 UID 맞춤
+                  runAsGroup: 1000
+              volumes:
+              - name: kaniko-config
+                emptyDir: {}
+              - name: docker-volume
+                emptyDir: {}
+            """
+
+            // 기본 컨테이너를 kaniko로 지정
+            defaultContainer 'kaniko'
+        }
+    }
+
+    environment {
+        IMAGE_NAME = 'jcode-backend-dev'
+        REGISTRY_CREDENTIALS_ID = 'harbor-credentials'
+        HARBOR_CREDENTIALS = credentials("${REGISTRY_CREDENTIALS_ID}")
+        HARBOR_URL = credentials('harbor-url')
+        HARBOR_REPO = credentials('harbor-project')
+
+        GITHUB_REPO = 'https://github.com/hodu26/JCodeHub.git'
+        MANIFEST_REPO = 'https://github.com/hodu26/k8s-manifest.git'
+        GIT_CREDENTIALS_ID = 'github-https'
+        GIT_CREDENTIALS = credentials("${GIT_CREDENTIALS_ID}")
+        GIT_EMAIL = credentials('git_email')
+    }
+
+    options {
+        // 자동 checkout scm 끔
+        skipDefaultCheckout()
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                container('git') {
+                    git url: GITHUB_REPO, branch: 'main', credentialsId: GIT_CREDENTIALS_ID
+                }
+            }
+        }
+
+        // SonarQube를 사용하여 코드 품질을 분석하는 단계
+//         stage('SonarQube Analysis') {
+//             steps {
+//                 container('sonar-scanner') {
+//                     withSonarQubeEnv('sonarqube') {
+//                         // sonar-scanner 명령어를 실행하여 코드 분석을 수행합니다.
+//                         sh """
+//                             sonar-scanner \\
+//                             -Dsonar.projectKey=${HARBOR_PROJECT}-${IMAGE_NAME} \\
+//                             -Dsonar.projectName=${HARBOR_PROJECT}-${IMAGE_NAME} \\
+//                             -Dsonar.sources=. \\
+//                             -Dsonar.exclusions=**/node_modules/** \\
+//                             -Dsonar.login=${SONAR_TOKEN}
+//                         """
+//                     }
+//                 }
+//             }
+//         }
+
+        // Docker 설정 파일을 생성
+        stage('Create Docker Config') {
+            steps {
+                script {
+                    // Kaniko가 사용할 Docker 설정 파일을 생성
+                    sh """
+                        mkdir -p /home/jenkins/agent/.docker
+                        echo '{"auths":{"${HARBOR_URL}":{"username":"${HARBOR_CREDENTIALS_USR}","password":"${HARBOR_CREDENTIALS_PSW}"}}}' > /home/jenkins/agent/.docker/config.json
+                        cat /home/jenkins/agent/.docker/config.json
+                        cp /home/jenkins/agent/.docker/config.json /home/jenkins/agent/config.json
+                    """
+
+                    // Kaniko가 사용할 볼륨에 Docker 설정 파일을 복사
+                    container('kaniko') {
+                        sh """
+                            mkdir -p /kaniko/.docker
+                            cp /home/jenkins/agent/config.json /kaniko/.docker/config.json
+                            ls -la /kaniko/.docker
+                        """
+                    }
+                }
+            }
+        }
+
+        // Kaniko를 사용하여 도커 이미지를 빌드하고 푸시하는 단계
+        stage('Build image and Push to Harbor with Kaniko') {
+            steps {
+                container('kaniko') {
+                    sh 'chmod +x gradlew'
+                    sh """
+                        /kaniko/executor \\
+                        --context=\$(pwd) \\
+                        --destination=${HARBOR_URL}/${HARBOR_REPO}/${IMAGE_NAME}:${env.BUILD_ID} \\
+                        --destination=${HARBOR_URL}/${HARBOR_REPO}/${IMAGE_NAME}:latest \\
+                        --cleanup
+                    """
+                }
+            }
+        }
+
+        stage('Update Kubernetes Manifest') {
+            steps {
+                container('git') {
+                    script {
+                        sh '''
+                            set -euo pipefail
+
+                            echo "[1/8] Create .netrc for GitHub auth"
+                            HOME_DIR="$WORKSPACE/.home"
+                            mkdir -p "$HOME_DIR"
+                            chmod 700 "$HOME_DIR"
+                            export HOME="$HOME_DIR"
+
+                            # 민감 정보가 포함되므로 로그 비활성화
+                            set +x
+                            printf "machine github.com\n  login %s\n  password %s\n" \
+                                "$GIT_CREDENTIALS_USR" "$GIT_CREDENTIALS_PSW" > ~/.netrc
+                            chmod 600 ~/.netrc
+                            set -x
+
+                            echo "[2/8] Clone manifest repo"
+                            git clone "$MANIFEST_REPO" k8s-manifest
+
+                            echo "[3/8] Checkout main branch"
+                            cd k8s-manifest
+                            git fetch origin
+                            git checkout -B main origin/main || git checkout -B main
+
+                            echo "[4/8] Move to target dir"
+                            cd jcode/dev/backend
+                            ls -l
+
+                            # 이미지 태그 갱신 (셸 확장 사용, Groovy 보간 없음)
+                            echo "[5/8] Update image tag in manifest"
+                            sed -i "s|^\\([[:space:]]*\\)image:[[:space:]].*$|\\1image: $HARBOR_URL/$HARBOR_REPO/$IMAGE_NAME:$BUILD_ID|" jcode-backend-dev.yaml
+
+                            # git 사용자 설정 (비밀 아님)
+                            echo "[6/8] Git config (user)"
+                            git config --global user.email "$GIT_EMAIL"
+                            git config --global user.name  "hodu26"
+
+                            echo "[7/8] Commit changes if any"
+                            git add jcode-backend-dev.yaml
+
+                            # 변경 사항이 없으면 커밋/푸시 생략
+                            if git diff --cached --quiet; then
+                              echo "No changes to commit."
+                            else
+                              git commit -m "update: update image to $BUILD_ID"
+                              # 푸시 시에도 자격증명은 .netrc로 자동 처리됨
+                              echo "[8/8] Push to origin/main"
+                              git push --set-upstream origin main
+                            fi
+                        '''
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Successfully built and pushed the image!'
+        }
+        failure {
+            echo 'Failed to build or push the image'
+        }
+        always {
+            deleteDir()
+            echo "Cleaning up pod resources"
+        }
+    }
+}
